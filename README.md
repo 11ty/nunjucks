@@ -23,7 +23,7 @@ Nunjucks info and documentation source is in [`/docs`](/docs) and publishes to h
 
 ## Browser Support
 
-Supported in all modern browsers. For IE8 support, use [es5-shim](https://github.com/es-shims/es5-shim).
+Supported in all modern browsers.
 
 ## Tests
 
