@@ -19,7 +19,7 @@ jobs:
             os: macos-14
           - node: 20
             os: ubuntu-latest
-          - node: 20.12.1  # TODO: spawn node18+/win: github.com/nodejs/nodejs.org/pull/6660
+          - node: 20
             os: windows-2025
           - node: 22
             os: macos-15-intel
