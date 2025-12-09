@@ -3,8 +3,8 @@
     ["@babel/env", {
       "loose": true,
       "targets": {
-        "browsers": ["last 2 versions", "safari >= 7", "ie 9"],
-        "node": "6"
+        "browsers": ["last 2 versions"],
+        "node": "20"
       }
     }]
   ],
