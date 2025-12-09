@@ -5,6 +5,7 @@ A temporary fork of Mozilla `nunjucks` with the following changes:
 - Dependency simplification:
   - Removes precompile CLI (`commander` dependency)
   - Removes `watch` option (`chokidar` dependency)
+  - Node 20+ minimum
 
 [Nunjucks](https://mozilla.github.io/nunjucks/) is a full featured
 templating engine for javascript. It is heavily inspired by
