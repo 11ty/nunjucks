@@ -63,7 +63,6 @@
     "build:transpile": "babel nunjucks --out-dir .",
     "build:bundle": "node scripts/bundle.js",
     "build": "npm run build:transpile && npm run build:bundle",
-    "codecov": "codecov",
     "mocha": "mocha -R spec tests",
     "lint": "eslint --flag unstable_config_lookup_from_file nunjucks scripts tests",
     "prepare": "npm run build",
