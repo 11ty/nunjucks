@@ -10,7 +10,7 @@
   if (typeof require !== 'undefined') {
     expect = require('expect.js');
     nunjucks = require('../nunjucks/index');
-    fs = require('fs-extra');
+    fs = require('fs');
     path = require('path');
     os = require('os');
   } else {
@@ -19,8 +19,32 @@
   }
 
   function rmdir(dirPath) {
-    fs.emptyDirSync(dirPath);
-    fs.rmdirSync(dirPath);
+    if(!fs.existsSync(dirPath)) {
+      return;
+    }
+
+    fs.rmSync(dirPath, { recursive: true, force: true });
+  }
+
+  function emptyDir(dir) {
+    let items
+    try {
+      items = fs.readdirSync(dir)
+    } catch {
+      throw new Error('Directory does not exist.');
+    }
+
+    items.forEach(item => {
+      item = path.join(dir, item)
+      fs.rmSync(item)
+    })
+  }
+
+  function writeFile(filePath, contents) {
+    fs.writeFileSync(filePath, contents, {
+      encoding: 'utf-8',
+      recursive: true,
+    });
   }
 
   describe('nunjucks.configure', function() {
@@ -30,7 +54,7 @@
       if (fs && path && os) {
         try {
           tempdir = fs.mkdtempSync(path.join(os.tmpdir(), 'templates'));
-          fs.emptyDirSync(tempdir);
+          emptyDir(tempdir);
         } catch (e) {
           rmdir(tempdir);
           throw e;
@@ -52,10 +76,10 @@
       }
       nunjucks.configure(tempdir);
 
-      fs.writeFileSync(tempdir + '/test.html', '{{ name }}', 'utf-8');
+      writeFile(tempdir + '/test.html', '{{ name }}');
       expect(nunjucks.render('test.html', {name: 'foo'})).to.be('foo');
 
-      fs.writeFileSync(tempdir + '/test.html', '{{ name }}-changed', 'utf-8');
+      writeFile(tempdir + '/test.html', '{{ name }}-changed');
       expect(nunjucks.render('test.html', {name: 'foo'})).to.be('foo');
     });
 
@@ -66,10 +90,10 @@
       }
       nunjucks.configure(tempdir, {noCache: true});
 
-      fs.writeFileSync(tempdir + '/test.html', '{{ name }}', 'utf-8');
+      writeFile(tempdir + '/test.html', '{{ name }}');
       expect(nunjucks.render('test.html', {name: 'foo'})).to.be('foo');
 
-      fs.writeFileSync(tempdir + '/test.html', '{{ name }}-changed', 'utf-8');
+      writeFile(tempdir + '/test.html', '{{ name }}-changed');
       expect(nunjucks.render('test.html', {name: 'foo'})).to.be('foo-changed');
     });
   });
