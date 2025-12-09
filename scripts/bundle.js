@@ -9,7 +9,6 @@ var path = require('path');
 var webpack = require('webpack');
 var pjson = require('../package.json');
 var promiseSequence = require('./lib/utils').promiseSequence;
-var TerserPlugin = require('terser-webpack-plugin');
 var TEST_ENV = (process.env.NODE_ENV === 'test');
 
 var destDir = path.resolve(path.join(
@@ -18,7 +17,10 @@ var destDir = path.resolve(path.join(
 
 function runWebpack(opts) {
   var type = (opts.slim) ? '(slim, only works with precompiled templates)' : '';
-  var ext = (opts.min) ? '.min.js' : '.js';
+  if (opts.min) {
+    throw new Error('Minified files were removed.');
+  }
+  var ext = '.js';
   if (opts.slim) {
     ext = '-slim' + ext;
   }
@@ -79,23 +81,6 @@ function runWebpack(opts) {
         ]
       };
 
-      if (opts.min) {
-        config.plugins.push(
-          new TerserPlugin({
-            terserOptions: {
-              mangle: {
-                properties: {
-                  regex: /^_[^_]/
-                }
-              },
-              compress: {
-                arrows: false
-              }
-            }
-          })
-        );
-      }
-
       webpack(config).run(function(err, stats) {
         if (err) {
           reject(err);
@@ -109,10 +94,7 @@ function runWebpack(opts) {
   });
 }
 
-var runConfigs = [
-  {min: true, slim: false},
-  {min: true, slim: true}
-];
+var runConfigs = [];
 
 if (!TEST_ENV) {
   runConfigs.unshift(
