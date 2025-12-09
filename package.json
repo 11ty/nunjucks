@@ -64,7 +64,7 @@
     "build:bundle": "node scripts/bundle.js",
     "build": "npm run build:transpile && npm run build:bundle",
     "mocha": "mocha -R spec tests",
-    "lint": "eslint --flag unstable_config_lookup_from_file nunjucks scripts tests",
+    "lint": "eslint --flag v10_config_lookup_from_file nunjucks scripts tests",
     "prepare": "npm run build",
     "test:instrument": "cross-env NODE_ENV=test scripts/bundle.js",
     "test:runner": "cross-env NODE_ENV=test NODE_PATH=tests/test-node-pkgs scripts/testrunner.js",
