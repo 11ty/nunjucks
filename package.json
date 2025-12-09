@@ -25,7 +25,7 @@
     "expect.js": "*",
     "express": "4.x",
     "fs-extra": "^5.0.0",
-    "get-port": "^3.2.0",
+    "get-port": "^7.1.0",
     "globals": "^16.5.0",
     "mocha": "< 8.x",
     "mocha-phantomjs-core": "^2.1.2",

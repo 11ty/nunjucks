@@ -15,7 +15,7 @@ module.exports = defineConfig([
       {
         languageOptions: {
           sourceType: 'module',
-          ecmaVersion: 2017,
+          ecmaVersion: 'latest',
           parserOptions: {},
 
           globals: Object.assign({}, globals.node, { nunjucks: false }),
