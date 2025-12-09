@@ -67,7 +67,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/mozilla/nunjucks.git"
+    "url": "git+https://github.com/11ty/nunjucks.git"
   },
   "keywords": [
     "template",
@@ -75,6 +75,6 @@
   ],
   "license": "BSD-2-Clause",
   "bugs": {
-    "url": "https://github.com/mozilla/nunjucks/issues"
+    "url": "https://github.com/11ty/nunjucks/issues"
   }
 }
