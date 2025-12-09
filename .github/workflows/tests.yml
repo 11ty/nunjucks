@@ -29,8 +29,6 @@ jobs:
             os: ubuntu-latest
           - node: 24
             os: macos-latest
-          - node: 25
-            os: macos-26
 
     name: Test (node-${{ matrix.node }}/${{ matrix.os }})
 

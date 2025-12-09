@@ -94,13 +94,10 @@ function runWebpack(opts) {
   });
 }
 
-var runConfigs = [];
-
-if (!TEST_ENV) {
-  runConfigs.unshift(
-    {min: false, slim: false},
-    {min: false, slim: true});
-}
+var runConfigs = [
+  {min: false, slim: false},
+  {min: false, slim: true}
+];
 
 var promises = runConfigs.map(function(opts) {
   return function() {

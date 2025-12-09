@@ -20,8 +20,8 @@ maintenance.
 
 ## Lorsque nous sommes dans un navigateur ...
 
-Utilisez [nunjucks.js](../files/nunjucks.js) ([min](../files/nunjucks.min.js)) pour avoir l’intégralité de la bibliothèque ou
-[nunjucks-slim.js](../files/nunjucks-slim.js) ([min](../files/nunjucks-slim.min.js)) pour avoir une version allégée
+Utilisez [nunjucks.js](../files/nunjucks.js) pour avoir l’intégralité de la bibliothèque ou
+[nunjucks-slim.js](../files/nunjucks-slim.js) pour avoir une version allégée
 qui fonctionne uniquement avec les templates précompilés.
 
 ### Quel fichier devez-vous utiliser ?
