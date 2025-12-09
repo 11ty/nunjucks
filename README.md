@@ -1,4 +1,4 @@
-# @11ty/Nunjucks
+# `@11ty/nunjucks`
 
 A temporary fork of Mozilla `nunjucks` with the following changes:
 
