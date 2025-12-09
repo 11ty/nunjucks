@@ -2,10 +2,16 @@ var mochaPhantom = require('./mocha-phantomjs');
 var spawn = require('child_process').spawn;
 var getStaticServer = require('./static-server');
 var path = require('path');
+var os = require('os');
 
 var utils = require('./utils');
 var lookup = utils.lookup;
 var promiseSequence = utils.promiseSequence;
+
+var IS_SHELL = false;
+if (os.type() === 'Windows_NT') {
+  IS_SHELL = true;
+}
 
 function mochaRun() {
   const bin = lookup('.bin/nyc', true);
@@ -30,7 +36,8 @@ function mochaRun() {
         ...mochaArgs,
       ], {
         cwd: path.join(__dirname, '../..'),
-        env: process.env
+        env: process.env,
+        shell: IS_SHELL,
       });
 
       proc.stdout.pipe(process.stdout);
