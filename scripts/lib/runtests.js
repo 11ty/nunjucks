@@ -1,17 +1,11 @@
 var mochaPhantom = require('./mocha-phantomjs');
-var spawn = require('child_process').spawn;
+var spawn = require('cross-spawn');
 var getStaticServer = require('./static-server');
 var path = require('path');
-var os = require('os');
 
 var utils = require('./utils');
 var lookup = utils.lookup;
 var promiseSequence = utils.promiseSequence;
-
-var IS_SHELL = false;
-if (os.type() === 'Windows_NT') {
-  IS_SHELL = true;
-}
 
 function mochaRun() {
   const bin = lookup('.bin/nyc', true);
@@ -37,11 +31,8 @@ function mochaRun() {
       ], {
         cwd: path.join(__dirname, '../..'),
         env: process.env,
-        shell: IS_SHELL,
+        stdio: 'inherit',
       });
-
-      proc.stdout.pipe(process.stdout);
-      proc.stderr.pipe(process.stderr);
 
       proc.on('error', (err) => reject(err));
 

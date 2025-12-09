@@ -1,6 +1,6 @@
 'use strict';
 
-var spawn = require('child_process').spawn;
+var spawn = require('cross-spawn');
 var path = require('path');
 var lookup = require('./utils').lookup;
 
@@ -33,10 +33,10 @@ module.exports = function mochaPhantomJS(url, options) {
         throw new Error('PhantomJS not found');
       }
 
-      const proc = spawn(phantomjsPath, args, {cwd: path.join(__dirname, '../..')});
-
-      proc.stdout.pipe(process.stdout);
-      proc.stderr.pipe(process.stderr);
+      const proc = spawn(phantomjsPath, args, {
+        cwd: path.join(__dirname, '../..'),
+        stdio: 'inherit',
+      });
 
       proc.on('error', (err) => {
         reject(err);

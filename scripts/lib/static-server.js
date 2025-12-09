@@ -1,12 +1,13 @@
 var connect = require('connect');
 var serveStatic = require('serve-static');
+var getPort = require('get-port');
 var http = require('http');
 var path = require('path');
 
-function getStaticServer(port) {
+function getStaticServer() {
   var staticRoot = path.join(__dirname, '../..');
-  var portPromise = (typeof port === 'undefined') ? import('get-port').then(mod => mod.default()) : Promise.resolve(port);
-  return portPromise.then((port) => { // eslint-disable-line no-shadow
+
+  return getPort().then((port) => {
     return new Promise((resolve, reject) => {
       try {
         const app = connect().use(serveStatic(staticRoot));
