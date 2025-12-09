@@ -56,14 +56,6 @@
     "uglifyjs-webpack-plugin": "^1.1.6",
     "webpack": "^3.10.0"
   },
-  "peerDependencies": {
-    "chokidar": "^3.3.0"
-  },
-  "peerDependenciesMeta": {
-    "chokidar": {
-      "optional": true
-    }
-  },
   "_moduleAliases": {
     "babel-register": "@babel/register"
   },

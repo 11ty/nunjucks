@@ -1,9 +1,10 @@
-# Nunjucks
+# @11ty/Nunjucks
 
-[![NPM Version][npm-image]][npm-url]
-[![NPM Downloads][downloads-image]][downloads-url]
-[![CI][github-actions-image]][github-actions-url]
-[![Codecov][codecov-image]][codecov-url]
+A temporary fork of Mozilla `nunjucks` with the following changes:
+
+- Dependency simplification:
+  - Removes precompile CLI (`commander` dependency)
+  - Removes `watch` option (`chokidar` dependency)
 
 [Nunjucks](https://mozilla.github.io/nunjucks/) is a full featured
 templating engine for javascript. It is heavily inspired by
@@ -12,11 +13,7 @@ templating engine for javascript. It is heavily inspired by
 
 ## Installation
 
-`npm install nunjucks`
-
-To use the file watcher built-in to Nunjucks, Chokidar must be installed separately.
-
-`npm install nunjucks chokidar`
+`npm install @11ty/nunjucks`
 
 (View the [CHANGELOG](https://github.com/mozilla/nunjucks/releases))
 
@@ -43,13 +40,3 @@ Contributions are always welcome! Before you submit an issue or pull request, pl
 ## Contributors
 
 [![Contributors graph. Avatars provided by https://contrib.rocks](https://contrib.rocks/image?repo=mozilla/nunjucks)](https://github.com/mozilla/nunjucks/graphs/contributors)
-
-
-[npm-image]: https://img.shields.io/npm/v/nunjucks.svg
-[npm-url]: https://npmjs.org/package/nunjucks
-[downloads-image]: https://img.shields.io/npm/dm/nunjucks.svg
-[downloads-url]: https://npmjs.org/package/nunjucks
-[github-actions-image]: https://github.com/mozilla/nunjucks/actions/workflows/tests.yml/badge.svg
-[github-actions-url]: https://github.com/mozilla/nunjucks/actions
-[codecov-image]: https://img.shields.io/codecov/c/gh/mozilla/nunjucks.svg
-[codecov-url]: https://codecov.io/gh/mozilla/nunjucks/branch/master

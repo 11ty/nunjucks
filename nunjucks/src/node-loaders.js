@@ -6,7 +6,6 @@ const fs = require('fs');
 const path = require('path');
 const Loader = require('./loader');
 const {PrecompiledLoader} = require('./precompiled-loader.js');
-let chokidar;
 
 class FileSystemLoader extends Loader {
   constructor(searchPaths, opts) {
@@ -32,24 +31,7 @@ class FileSystemLoader extends Loader {
     }
 
     if (opts.watch) {
-      // Watch all the templates in the paths and fire an event when
-      // they change
-      try {
-        chokidar = require('chokidar'); // eslint-disable-line global-require
-      } catch (e) {
-        throw new Error('watch requires chokidar to be installed');
-      }
-      const paths = this.searchPaths.filter(fs.existsSync);
-      const watcher = chokidar.watch(paths);
-      watcher.on('all', (event, fullname) => {
-        fullname = path.resolve(fullname);
-        if (event === 'change' && fullname in this.pathsToNames) {
-          this.emit('update', this.pathsToNames[fullname], fullname);
-        }
-      });
-      watcher.on('error', (error) => {
-        console.log('Watcher error: ' + error);
-      });
+      throw new Error('watch option is no longer supported, optional chokidar dependency was removed.');
     }
   }
 
@@ -93,23 +75,7 @@ class NodeResolveLoader extends Loader {
     this.noCache = !!opts.noCache;
 
     if (opts.watch) {
-      try {
-        chokidar = require('chokidar'); // eslint-disable-line global-require
-      } catch (e) {
-        throw new Error('watch requires chokidar to be installed');
-      }
-      this.watcher = chokidar.watch();
-
-      this.watcher.on('change', (fullname) => {
-        this.emit('update', this.pathsToNames[fullname], fullname);
-      });
-      this.watcher.on('error', (error) => {
-        console.log('Watcher error: ' + error);
-      });
-
-      this.on('load', (name, source) => {
-        this.watcher.add(source.path);
-      });
+      throw new Error('watch option is no longer supported internally, optional chokidar dependency was removed.');
     }
   }
 
