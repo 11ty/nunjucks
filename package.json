@@ -4,9 +4,8 @@
   "version": "3.2.4",
   "author": "James Long <longster@gmail.com>",
   "dependencies": {
-    "a-sync-waterfall": "^1.0.0",
-    "asap": "^2.0.3",
-    "commander": "^5.1.0"
+    "a-sync-waterfall": "^1.0.1",
+    "asap": "^2.0.6"
   },
   "browser": "./browser/nunjucks.js",
   "devDependencies": {
@@ -79,9 +78,6 @@
     "test:instrument": "cross-env NODE_ENV=test scripts/bundle.js",
     "test:runner": "cross-env NODE_ENV=test NODE_PATH=tests/test-node-pkgs scripts/testrunner.js",
     "test": "npm run lint && npm run test:instrument && npm run test:runner"
-  },
-  "bin": {
-    "nunjucks-precompile": "./bin/precompile"
   },
   "main": "index.js",
   "files": [

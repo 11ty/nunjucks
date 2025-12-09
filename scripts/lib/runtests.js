@@ -7,24 +7,18 @@ var utils = require('./utils');
 var lookup = utils.lookup;
 var promiseSequence = utils.promiseSequence;
 
-function mochaRun({cliTest = false} = {}) {
-  // We need to run the cli test without nyc because of weird behavior
-  // with spawn-wrap
-  const bin = lookup((cliTest) ? '.bin/mocha' : '.bin/nyc', true);
-  const runArgs = (cliTest)
-    ? []
-    : [
-      '--require', '@babel/register',
-      '--exclude',
-      'tests/**',
-      '--silent',
-      '--no-clean',
-      require.resolve('mocha/bin/mocha'),
-    ];
+function mochaRun() {
+  const bin = lookup('.bin/nyc', true);
+  const runArgs = [
+    '--require', '@babel/register',
+    '--exclude',
+    'tests/**',
+    '--silent',
+    '--no-clean',
+    require.resolve('mocha/bin/mocha'),
+  ];
 
-  const mochaArgs = (cliTest)
-    ? ['tests/cli.js']
-    : ['--grep', 'precompile cli', '--invert', 'tests'];
+  const mochaArgs = ['--grep', 'precompile cli', '--invert', 'tests'];
 
   return new Promise((resolve, reject) => {
     try {
@@ -62,8 +56,7 @@ function runtests() {
     var server;
 
     const mochaPromise = promiseSequence([
-      () => mochaRun({cliTest: false}),
-      () => mochaRun({cliTest: true}),
+      () => mochaRun(),
     ]);
 
     mochaPromise.then(() => {
