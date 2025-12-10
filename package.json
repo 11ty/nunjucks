@@ -58,7 +58,7 @@
   "main": "index.js",
   "files": [
     "bin/**",
-    "browser/**",
+    "browser/*.js",
     "src/**"
   ],
   "nyc": {
