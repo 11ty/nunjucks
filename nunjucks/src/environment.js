@@ -14,8 +14,8 @@ const expressApp = require('./express-app');
 
 // If the user is using the async API, *always* call it
 // asynchronously even if the template was synchronous.
-function callbackImmediate(cb, err, res) {
-  setImmediate(() => {
+function callbackAsync(cb, err, res) {
+  Promise.resolve().then(() => {
     cb(err, res);
   });
 }
@@ -306,7 +306,7 @@ class Environment extends EmitterObj {
 
     this.getTemplate(name, (err, tmpl) => {
       if (err && cb) {
-        callbackImmediate(cb, err);
+        callbackAsync(cb, err);
       } else if (err) {
         throw err;
       } else {
@@ -462,7 +462,7 @@ class Template extends Obj {
     } catch (e) {
       const err = lib._prettifyError(this.path, this.env.opts.dev, e);
       if (cb) {
-        return callbackImmediate(cb, err);
+        return callbackAsync(cb, err);
       } else {
         throw err;
       }
@@ -491,7 +491,7 @@ class Template extends Obj {
 
       if (cb) {
         if (forceAsync) {
-          callbackImmediate(cb, err, res);
+          callbackAsync(cb, err, res);
         } else {
           cb(err, res);
         }
