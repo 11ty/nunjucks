@@ -1,6 +1,5 @@
 'use strict';
 
-const asap = require('asap');
 const waterfall = require('a-sync-waterfall');
 const lib = require('./lib');
 const compiler = require('./compiler');
@@ -15,8 +14,8 @@ const expressApp = require('./express-app');
 
 // If the user is using the async API, *always* call it
 // asynchronously even if the template was synchronous.
-function callbackAsap(cb, err, res) {
-  asap(() => {
+function callbackImmediate(cb, err, res) {
+  setImmediate(() => {
     cb(err, res);
   });
 }
@@ -307,7 +306,7 @@ class Environment extends EmitterObj {
 
     this.getTemplate(name, (err, tmpl) => {
       if (err && cb) {
-        callbackAsap(cb, err);
+        callbackImmediate(cb, err);
       } else if (err) {
         throw err;
       } else {
@@ -463,7 +462,7 @@ class Template extends Obj {
     } catch (e) {
       const err = lib._prettifyError(this.path, this.env.opts.dev, e);
       if (cb) {
-        return callbackAsap(cb, err);
+        return callbackImmediate(cb, err);
       } else {
         throw err;
       }
@@ -492,7 +491,7 @@ class Template extends Obj {
 
       if (cb) {
         if (forceAsync) {
-          callbackAsap(cb, err, res);
+          callbackImmediate(cb, err, res);
         } else {
           cb(err, res);
         }

@@ -7,8 +7,7 @@
   },
   "author": "James Long <longster@gmail.com>",
   "dependencies": {
-    "a-sync-waterfall": "^1.0.1",
-    "asap": "^2.0.6"
+    "a-sync-waterfall": "^1.0.1"
   },
   "browser": "./browser/nunjucks.js",
   "devDependencies": {
