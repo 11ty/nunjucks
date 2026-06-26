@@ -4,10 +4,10 @@
   var expect, util, finish, render;
 
   if (typeof require !== 'undefined') {
-    expect = require('expect.js');
+    expect = globalThis.expect;
     util = require('./util');
   } else {
-    expect = window.expect;
+    expect = globalThis.expect;
     util = window.util;
   }
 
@@ -19,7 +19,7 @@
       render('{{ foo("cvan") }}', {}, {
         noThrow: true
       }, function(err) {
-        expect(err).to.match(/Unable to call `foo`, which is undefined/);
+        expect(String(err)).toMatch(/Unable to call `foo`, which is undefined/);
       });
 
       finish(done);
@@ -29,7 +29,7 @@
       render('{{ foo["bar"]("cvan") }}', {}, {
         noThrow: true
       }, function(err) {
-        expect(err).to.match(/foo\["bar"\]/);
+        expect(String(err)).toMatch(/foo\["bar"\]/);
       });
 
       finish(done);
@@ -39,7 +39,7 @@
       render('{{ foo.bar("second call") }}', {}, {
         noThrow: true
       }, function(err) {
-        expect(err).to.match(/foo\["bar"\]/);
+        expect(String(err)).toMatch(/foo\["bar"\]/);
       });
 
       finish(done);
@@ -49,7 +49,7 @@
       render('{{ foo.barThatIsLongerThanTen() }}', {}, {
         noThrow: true
       }, function(err) {
-        expect(err).to.match(/foo\["barThatIsLongerThanTen"\]/);
+        expect(String(err)).toMatch(/foo\["barThatIsLongerThanTen"\]/);
       });
 
       finish(done);
@@ -59,7 +59,7 @@
       render('{{ foo.bar("multiple", "args") }}', {}, {
         noThrow: true
       }, function(err) {
-        expect(err).to.match(/foo\["bar"\]/);
+        expect(String(err)).toMatch(/foo\["bar"\]/);
       });
 
       render('{{ foo["bar"]["zip"]("multiple", "args") }}',
@@ -68,7 +68,7 @@
           noThrow: true
         },
         function(err) {
-          expect(err).to.match(/foo\["bar"\]\["zip"\]/);
+          expect(String(err)).toMatch(/foo\["bar"\]\["zip"\]/);
         });
 
       finish(done);
@@ -83,8 +83,8 @@
         noThrow: true
       },
       function(err, res) {
-        expect(err).to.equal(null);
-        expect(typeof res).to.be('string');
+        expect(err).toBe(null);
+        expect(typeof res).toBe('string');
       });
 
       finish(done);
@@ -104,8 +104,8 @@
         noThrow: true
       },
       function(err, res) {
-        expect(err).to.equal(null);
-        expect(res).to.equal('hello world');
+        expect(err).toBe(null);
+        expect(res).toBe('hello world');
       });
 
       finish(done);
@@ -119,8 +119,8 @@
       render('{{ payload }}', data, {
         noThrow: true
       }, function(err, res) {
-        expect(err).to.equal(null);
-        expect(res).to.equal(payload);
+        expect(err).toBe(null);
+        expect(res).toBe(payload);
       });
       delete Object.getPrototypeOf(data).payload;
 

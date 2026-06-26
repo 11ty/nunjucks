@@ -7,10 +7,15 @@ module.exports = defineConfig([
   js.configs.recommended,
   {
     languageOptions: {
+      ecmaVersion: "latest",
+      sourceType: "module",
       globals: {
         ...globals.node,
-        ...globals.mocha,
+        ...globals.vitest,
         ...globals.browser,
+        // Mocha-style suite hooks aliased to Vitest in tests/vitest.setup.js.
+        before: false,
+        after: false,
         nunjucks: false,
       },
     },

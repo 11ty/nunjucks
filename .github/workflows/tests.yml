@@ -30,4 +30,5 @@ jobs:
           node-version: ${{ matrix.node }}
           # cache: npm
       - run: npm ci
+      - run: npx playwright install
       - run: npm test

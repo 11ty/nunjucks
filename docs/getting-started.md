@@ -37,22 +37,15 @@ This includes the most recent version and all versions still in maintenance.
 
 ## When in the Browser...
 
-Grab [nunjucks.js](files/nunjucks.js) for the full library, or
-[nunjucks-slim.js](files/nunjucks-slim.js) for the slim version
-which only works with precompiled templates.
+Grab [nunjucks.js](files/nunjucks.js) and include it on the page.
 
-### Which file should you use?
-
-* Use **nunjucks.js** to dynamically load templates, auto-reload
-  templates when they are changed, and use precompiled templates.
-  Comes with the full compiler so is larger (20K min/gzipped). Use
-  this to get started, and use in production if you don't mind a
-  larger file size.
-
-* Use **nunjucks-slim.js** to load precompiled templates and use them. Doesn't
-  come with the full compiler so it's smaller (8K min/gzipped), but *only* works with
-  precompiled templates. Typically used for production, and possibly
-  development if you use the [grunt](https://github.com/jlongster/grunt-nunjucks) or [gulp](https://github.com/sindresorhus/gulp-nunjucks) tasks to automatically recompile templates.
+**nunjucks.js** can dynamically load templates, auto-reload templates
+when they are changed, and use precompiled templates. It comes with the
+full compiler (20K min/gzipped). In production you can [precompile](api.html#precompiling)
+your templates to a js file so the compiler doesn't run at runtime; this is
+typically paired with the [grunt](https://github.com/jlongster/grunt-nunjucks) or
+[gulp](https://github.com/sindresorhus/gulp-nunjucks) tasks to automatically recompile
+templates while developing.
 
 Simply include nunjucks with a `script` tag on the page:
 

@@ -12,48 +12,39 @@
   },
   "browser": "./browser/nunjucks.js",
   "devDependencies": {
-    "@babel/cli": "^7.28.3",
-    "@babel/core": "^7.28.5",
-    "@babel/preset-env": "^7.28.5",
-    "@babel/register": "^7.28.3",
-    "@eslint/js": "^9.39.1",
-    "babel-loader": "^10.0.0",
-    "babel-plugin-istanbul": "^7.0.1",
-    "babel-plugin-module-resolver": "^5.0.2",
-    "connect": "^3.7.0",
+    "@babel/cli": "^8.0.1",
+    "@babel/core": "^8.0.1",
+    "@babel/preset-env": "^8.0.2",
+    "@eslint/js": "^9.39.4",
+    "@vitest/browser": "^4.1.9",
+    "@vitest/browser-playwright": "^4.1.9",
+    "@vitest/coverage-v8": "^4.1.9",
+    "babel-loader": "^10.1.1",
+    "babel-plugin-module-resolver": "^5.0.3",
     "cross-env": "^10.1.0",
-    "cross-spawn": "^7.0.6",
-    "eslint": "^9.39.1",
-    "eslint-config-airbnb-extended": "^2.3.3",
+    "eslint": "^9.39.4",
+    "eslint-config-airbnb-extended": "^3.1.0",
     "eslint-plugin-import": "^2.32.0",
-    "expect.js": "*",
     "express": "^5.2.1",
-    "get-port": "^5.1.1",
-    "globals": "^16.5.0",
-    "mocha": "< 8.x",
-    "mocha-phantomjs-core": "^2.1.2",
-    "mocha-phantomjs-istanbul": "0.0.2",
-    "module-alias": "^2.2.3",
+    "globals": "^17.7.0",
     "node-libs-browser": "^2.2.1",
-    "nyc": "^17.1.0",
-    "phantomjs-prebuilt": "^2.1.16",
-    "serve-static": "^2.2.0",
-    "supertest": "*",
-    "webpack": "^5.103.0"
-  },
-  "_moduleAliases": {
-    "babel-register": "@babel/register"
+    "playwright": "^1.61.1",
+    "supertest": "^7.2.2",
+    "vitest": "^4.1.9",
+    "webpack": "^5.108.1"
   },
   "scripts": {
     "build:transpile": "babel nunjucks --out-dir .",
     "build:bundle": "node scripts/bundle.js",
     "build": "npm run build:transpile && npm run build:bundle",
-    "mocha": "mocha -R spec tests",
+    "build:test": "cross-env NODE_ENV=test node scripts/bundle.js",
     "lint": "eslint --flag v10_config_lookup_from_file nunjucks scripts tests",
     "prepare": "npm run build",
-    "test:instrument": "cross-env NODE_ENV=test scripts/bundle.js",
-    "test:runner": "cross-env NODE_ENV=test NODE_PATH=tests/test-node-pkgs scripts/testrunner.js",
-    "test": "npm run lint && npm run test:instrument && npm run test:runner"
+    "test:node": "vitest run --project node",
+    "test:browser": "npm run build:test && vitest run --project browser",
+    "test:watch": "vitest",
+    "coverage": "vitest run --project node --coverage",
+    "test": "npm run lint && npm run build:test && vitest run"
   },
   "main": "index.js",
   "files": [
@@ -61,13 +52,6 @@
     "browser/*.js",
     "src/**"
   ],
-  "nyc": {
-    "require": [
-      "babel-register"
-    ],
-    "sourceMap": false,
-    "instrument": false
-  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/11ty/nunjucks.git"
