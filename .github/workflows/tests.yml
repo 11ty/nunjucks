@@ -14,13 +14,11 @@ jobs:
     strategy:
       matrix:
         os: ["ubuntu-latest", "macos-latest", "windows-latest"]
-        node: ["20", "22", "24"]
+        node: ["20", "22", "24", "26"]
 
     name: Test (node-${{ matrix.node }}/${{ matrix.os }})
 
     steps:
-      - if: runner.os == 'Linux'  # PhantomJS OpenSSL 1.1.1 vs 3.x Ubuntu 22+ compat
-        run: echo "OPENSSL_CONF=/dev/null" >> "$GITHUB_ENV"
       - if: runner.os == 'Windows'  # Tests would fail LF vs CRLF linebreak-style
         run: git config --global core.autocrlf false && git config --global core.eol lf
       - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # 4.1.7
