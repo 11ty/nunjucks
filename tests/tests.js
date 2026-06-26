@@ -324,6 +324,7 @@
       finish(done);
     });
 
+    // Test graciously provided by https://github.com/mozilla/nunjucks/issues/1363
     it('should allow async custom tag within sync custom tag compilation', function(done) {
       function TestSyncExtension() {
         this.tags = ['testsync'];
@@ -369,14 +370,12 @@
         };
       }
 
-      // First prove it works normally
       equal('{% testasync %}abcdefghi{% endtestasync %}', null,
         {
           extensions: { TestAsyncExtension: new TestAsyncExtension() }
         },
         'ABCDEFGHI');
-        
-      // Then fails with custom tag (also fails with include, but I don't know how write a test for this, include is probably a sync tag anyway?)
+
       equal('{% testsync %}{% testasync %}abcdefghi{% endtestasync %}{% endtestsync %}', null,
         {
           extensions: { TestExtension: new TestAsyncExtension(), TestSyncExtension: new TestSyncExtension()  },
