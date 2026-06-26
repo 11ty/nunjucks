@@ -12,17 +12,17 @@
   },
   "browser": "./browser/nunjucks.js",
   "devDependencies": {
-    "@babel/cli": "^7.28.3",
-    "@babel/core": "^7.28.5",
-    "@babel/preset-env": "^7.28.5",
-    "@eslint/js": "^9.39.1",
+    "@babel/cli": "^7.29.7",
+    "@babel/core": "^7.29.7",
+    "@babel/preset-env": "^7.29.7",
+    "@eslint/js": "^9.39.4",
     "@vitest/browser": "^4.1.9",
     "@vitest/browser-playwright": "^4.1.9",
     "@vitest/coverage-v8": "^4.1.9",
-    "babel-loader": "^10.0.0",
-    "babel-plugin-module-resolver": "^5.0.2",
+    "babel-loader": "^10.1.1",
+    "babel-plugin-module-resolver": "^5.0.3",
     "cross-env": "^10.1.0",
-    "eslint": "^9.39.1",
+    "eslint": "^9.39.4",
     "eslint-config-airbnb-extended": "^2.3.3",
     "eslint-plugin-import": "^2.32.0",
     "express": "^5.2.1",
@@ -31,7 +31,7 @@
     "playwright": "^1.61.1",
     "supertest": "*",
     "vitest": "^4.1.9",
-    "webpack": "^5.103.0"
+    "webpack": "^5.108.1"
   },
   "scripts": {
     "build:transpile": "babel nunjucks --out-dir .",
