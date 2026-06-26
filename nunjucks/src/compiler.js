@@ -674,7 +674,7 @@ class Compiler extends Obj {
       // The object could be an arroy or object. Note that the
       // body of the loop is duplicated for each condition, but
       // we are optimizing for speed over size.
-      this._emitLine(`if(runtime.isArray(${arr})) {`);
+      this._emitLine(`if(Array.isArray(${arr})) {`);
       this._emitLine(`var ${len} = ${arr}.length;`);
       this._emitLine(`for(${i}=0; ${i} < ${arr}.length; ${i}++) {`);
 

@@ -69,7 +69,7 @@ class Environment extends EmitterObj {
         this.loaders = [new WebLoader('/views')];
       }
     } else {
-      this.loaders = lib.isArray(loaders) ? loaders : [loaders];
+      this.loaders = Array.isArray(loaders) ? loaders : [loaders];
     }
 
     // It's easy to use precompiled templates: just include them

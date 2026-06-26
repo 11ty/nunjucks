@@ -29,7 +29,7 @@
         }
       }
 
-      if (lib.isArray(type)) {
+      if (Array.isArray(type)) {
         expect(tok.type).toBe(type[0]);
         expect(tok.value).toBe(type[1]);
       } else if (lib.isObject(type)) {
