@@ -9,19 +9,19 @@
     templatesPath;
 
   if (typeof require !== 'undefined') {
-    expect = require('expect.js');
+    expect = globalThis.expect;
     Environment = require('../nunjucks/src/environment').Environment;
     WebLoader = require('../nunjucks/src/web-loaders').WebLoader;
     FileSystemLoader = require('../nunjucks/src/node-loaders').FileSystemLoader;
     NodeResolveLoader = require('../nunjucks/src/node-loaders').NodeResolveLoader;
     templatesPath = 'tests/templates';
   } else {
-    expect = window.expect;
+    expect = globalThis.expect;
     Environment = nunjucks.Environment;
     WebLoader = nunjucks.WebLoader;
     FileSystemLoader = nunjucks.FileSystemLoader;
     NodeResolveLoader = nunjucks.NodeResolveLoader;
-    templatesPath = '../templates';
+    templatesPath = '/test-templates';
   }
 
   describe('loader', function() {
@@ -43,7 +43,7 @@
 
       env = new Environment(new MyLoader(templatesPath));
       parent = env.getTemplate('fake.njk');
-      expect(parent.render()).to.be('Hello World');
+      expect(parent.render()).toBe('Hello World');
     });
 
     it('should catch loader error', function(done) {
@@ -64,8 +64,8 @@
 
       env = new Environment(new MyLoader(templatesPath));
       env.getTemplate('fake.njk', function(err, parent) {
-        expect(err).to.be.a(Error);
-        expect(parent).to.be(undefined);
+        expect(err).toBeInstanceOf(Error);
+        expect(parent).toBe(undefined);
 
         done();
       });
@@ -74,9 +74,9 @@
     describe('WebLoader', function() {
       it('should have default opts for WebLoader', function() {
         var webLoader = new WebLoader(templatesPath);
-        expect(webLoader).to.be.a(WebLoader);
-        expect(webLoader.useCache).to.be(false);
-        expect(webLoader.async).to.be(false);
+        expect(webLoader).toBeInstanceOf(WebLoader);
+        expect(webLoader.useCache).toBe(false);
+        expect(webLoader.async).toBe(false);
       });
 
       it('should emit a "load" event', function(done) {
@@ -87,7 +87,7 @@
         }
 
         loader.on('load', function(name, source) {
-          expect(name).to.equal('simple-base.njk');
+          expect(name).toBe('simple-base.njk');
           done();
         });
 
@@ -99,14 +99,14 @@
       describe('FileSystemLoader', function() {
         it('should have default opts', function() {
           var loader = new FileSystemLoader(templatesPath);
-          expect(loader).to.be.a(FileSystemLoader);
-          expect(loader.noCache).to.be(false);
+          expect(loader).toBeInstanceOf(FileSystemLoader);
+          expect(loader.noCache).toBe(false);
         });
 
         it('should emit a "load" event', function(done) {
           var loader = new FileSystemLoader(templatesPath);
           loader.on('load', function(name, source) {
-            expect(name).to.equal('simple-base.njk');
+            expect(name).toBe('simple-base.njk');
             done();
           });
 
@@ -119,14 +119,14 @@
       describe('NodeResolveLoader', function() {
         it('should have default opts', function() {
           var loader = new NodeResolveLoader();
-          expect(loader).to.be.a(NodeResolveLoader);
-          expect(loader.noCache).to.be(false);
+          expect(loader).toBeInstanceOf(NodeResolveLoader);
+          expect(loader.noCache).toBe(false);
         });
 
         it('should emit a "load" event', function(done) {
           var loader = new NodeResolveLoader();
           loader.on('load', function(name, source) {
-            expect(name).to.equal('dummy-pkg/simple-template.html');
+            expect(name).toBe('dummy-pkg/simple-template.html');
             done();
           });
 
@@ -136,19 +136,19 @@
         it('should render templates', function() {
           var env = new Environment(new NodeResolveLoader());
           var tmpl = env.getTemplate('dummy-pkg/simple-template.html');
-          expect(tmpl.render({foo: 'foo'})).to.be('foo');
+          expect(tmpl.render({foo: 'foo'})).toBe('foo');
         });
 
         it('should not allow directory traversal', function() {
           var loader = new NodeResolveLoader();
           var dummyPkgPath = require.resolve('dummy-pkg/simple-template.html');
-          expect(loader.getSource(dummyPkgPath)).to.be(null);
+          expect(loader.getSource(dummyPkgPath)).toBe(null);
         });
 
         it('should return null if no match', function() {
           var loader = new NodeResolveLoader();
           var tmplName = 'dummy-pkg/does-not-exist.html';
-          expect(loader.getSource(tmplName)).to.be(null);
+          expect(loader.getSource(tmplName)).toBe(null);
         });
       });
     }

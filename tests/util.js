@@ -10,14 +10,14 @@
     Template,
     Loader,
     precompileString,
-    templatesPath,
-    expect;
+    templatesPath;
+
+  // `expect` is provided globally by Vitest (config has `globals: true`).
 
   if (typeof window === 'undefined') {
     nunjucks = nunjucksFull = require('../nunjucks/index.js');
     Loader = nunjucks.FileSystemLoader;
     templatesPath = 'tests/templates';
-    expect = require('expect.js');
   } else {
     nunjucks = window.nunjucks;
     if (window.nunjucksFull) {
@@ -29,8 +29,7 @@
       nunjucksFull = window.nunjucksFull = nunjucks;
     }
     Loader = nunjucksFull.WebLoader;
-    templatesPath = '../templates';
-    expect = window.expect;
+    templatesPath = '/test-templates';
   }
   precompileString = nunjucksFull.precompileString;
   Environment = nunjucks.Environment;
@@ -58,7 +57,7 @@
     }
     opts = opts || {};
     var res = render(str, ctx, opts, env);
-    expect(res).to.be(str2);
+    expect(res).toBe(str2);
   }
 
   function jinjaEqual(str, ctx, str2, env) {

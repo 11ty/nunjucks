@@ -3,8 +3,6 @@
 
 'use strict';
 
-require('module-alias/register');
-
 var path = require('path');
 var webpack = require('webpack');
 var pjson = require('../package.json');

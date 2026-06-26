@@ -8,11 +8,6 @@
       }
     }]
   ],
-  "env": {
-    "test": {
-      "plugins": ["istanbul"]
-    }
-  },
   "ignore": [
     "scripts/lib/arrow-function-coverage-fix.js"
   ]

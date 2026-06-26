@@ -9,11 +9,11 @@
   var finish;
 
   if (typeof require !== 'undefined') {
-    expect = require('expect.js');
+    expect = globalThis.expect;
     util = require('./util');
     Environment = require('../nunjucks/src/environment').Environment;
   } else {
-    expect = window.expect;
+    expect = globalThis.expect;
     util = window.util;
     Environment = nunjucks.Environment;
   }
@@ -112,7 +112,7 @@
 
       env.addGlobal('hello', hello);
 
-      expect(env.getGlobal('hello')).to.be.equal(hello);
+      expect(env.getGlobal('hello')).toBe(hello);
 
       finish(done);
     });
@@ -123,7 +123,7 @@
 
       env.addGlobal('hello', hello);
 
-      expect(env.getGlobal('hello')).to.be.equal(hello);
+      expect(env.getGlobal('hello')).toBe(hello);
 
       finish(done);
     });
@@ -134,7 +134,7 @@
       // Using this format instead of .withArgs since env.getGlobal uses 'this'
       expect(function() {
         env.getGlobal('hello');
-      }).to.throwError();
+      }).toThrow();
 
       finish(done);
     });
@@ -162,7 +162,7 @@
       // Using this format instead of .withArgs since env2.getGlobal uses 'this'
       expect(function() {
         env2.getGlobal('hello');
-      }).to.throwError();
+      }).toThrow();
 
       finish(done);
     });
@@ -177,7 +177,7 @@
       try {
         render('{{ err() }}', null, {}, env);
       } catch (e) {
-        expect(e).to.be.a(Error);
+        expect(e).toBeInstanceOf(Error);
       }
 
       finish(done);

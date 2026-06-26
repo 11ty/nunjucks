@@ -1,5 +1,8 @@
 node_modules
 coverage
+.vitest-attachments
+.vitest-reports
+**/__screenshots__
 .#*
 docs/_site
 docs/files
