@@ -19,7 +19,8 @@ function runWebpack() {
         entry: './nunjucks/index.js',
         devtool: 'source-map',
         mode: TEST_ENV ? 'none' : 'production',
-        target: ['web', 'es5'],
+        // The source is ES2017 CommonJS; no transpilation step is needed.
+        target: ['web', 'es2017'],
         output: {
           path: destDir,
           filename: 'nunjucks.js',
@@ -29,30 +30,20 @@ function runWebpack() {
             return path.relative(destDir, info.absoluteResourcePath);
           }
         },
-        module: {
-          rules: [{
-            test: /nunjucks/,
-            exclude: /(node_modules|browser|tests)(?!\.js)/,
-            use: {
-              loader: 'babel-loader',
-              options: {
-                plugins: [['module-resolver', {
-                  extensions: ['.js'],
-                  resolvePath: function(sourcePath) {
-                    if (sourcePath.match(/^(fs|path|chokidar)$/)) {
-                      return 'node-libs-browser/mock/empty';
-                    }
-                    if (sourcePath.match(/\/loaders(\.js)?$/)) {
-                      return sourcePath.replace('loaders', 'web-loaders');
-                    }
-                    return null;
-                  },
-                }]]
-              }
-            }
-          }]
+        resolve: {
+          // The Node-only loaders are swapped out below, so the filesystem
+          // modules they referenced are stubbed to empty in the browser build.
+          fallback: {
+            fs: false,
+            path: false,
+          },
         },
         plugins: [
+          // `./loaders` re-exports the Node filesystem loaders; swap it for the
+          // browser (web) loaders. (loaders.js itself documents this rewrite.)
+          new webpack.NormalModuleReplacementPlugin(/\/loaders$/, function(resource) {
+            resource.request = resource.request.replace(/\/loaders$/, '/web-loaders');
+          }),
           new webpack.BannerPlugin(
             'Browser bundle of nunjucks ' + pjson.version
           ),
