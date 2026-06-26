@@ -262,6 +262,36 @@
         this.tags = ['asyncextension'];
 
         this.parse = function(parser, nodes, lexer) {
+          var tok, args, body;
+          tok = parser.nextToken();
+          args = parser.parseSignature(null, true);
+          parser.advanceAfterBlockEnd(tok.value);
+          body = parser.parseUntilBlocks('endasyncextension');
+          parser.advanceAfterBlockEnd();
+
+          return new nodes.CallExtensionAsync(this, 'run', args, [body,]);
+        };
+
+        this.run = function(context, url, body, callback) {
+          callback(null, 'Foo async extension content');
+        };
+      }
+
+      let contents = '{% macro wrap() %}{{ caller() }}{% endmacro %}' +
+        '{% call wrap() %}{% asyncextension "foobar" %}1{% endasyncextension %}{% endcall %}';
+
+      equal(contents, null,
+        { extensions: { AsyncExtension: new AsyncExtension() } },
+        'Foo async extension content');
+
+      finish(done);
+    });
+
+    it('should render async extensions inside macro (with error support)', function(done) {
+      function AsyncExtension() {
+        this.tags = ['asyncextension'];
+
+        this.parse = function(parser, nodes, lexer) {
           var tok, args, body, errorBody;
           tok = parser.nextToken();
           args = parser.parseSignature(null, true);
@@ -290,6 +320,68 @@
       equal(contents, null,
         { extensions: { AsyncExtension: new AsyncExtension() } },
         'Foo async extension content');
+
+      finish(done);
+    });
+
+    it('should allow async custom tag within sync custom tag compilation', function(done) {
+      function TestSyncExtension() {
+        this.tags = ['testsync'];
+
+        this.parse = function(parser, nodes) {
+          var content;
+          var tag;
+          parser.advanceAfterBlockEnd();
+
+          content = parser.parseUntilBlocks('endtestsync');
+          tag = new nodes.CallExtension(this, 'run', null, [content]);
+          parser.advanceAfterBlockEnd();
+
+          return tag;
+        };
+
+        this.run = function(context, content) {
+          // Reverse the string
+          return content().split('').reverse().join('');
+        };
+      }
+
+      function TestAsyncExtension() {
+        this.tags = ['testasync'];
+
+        this.parse = function(parser, nodes) {
+          var content;
+          var tag;
+          parser.advanceAfterBlockEnd();
+
+          content = parser.parseUntilBlocks('endtestasync');
+          tag = new nodes.CallExtensionAsync(this, 'run', null, [content]);
+          parser.advanceAfterBlockEnd();
+
+          return tag;
+        };
+
+        this.run = function(context, body, callback) {
+          body(function (e, bodyContent) {
+            // Uppercase the string
+            callback(null, bodyContent.toUpperCase());
+          });
+        };
+      }
+
+      // First prove it works normally
+      equal('{% testasync %}abcdefghi{% endtestasync %}', null,
+        {
+          extensions: { TestAsyncExtension: new TestAsyncExtension() }
+        },
+        'ABCDEFGHI');
+        
+      // Then fails with custom tag (also fails with include, but I don't know how write a test for this, include is probably a sync tag anyway?)
+      equal('{% testsync %}{% testasync %}abcdefghi{% endtestasync %}{% endtestsync %}', null,
+        {
+          extensions: { TestExtension: new TestAsyncExtension(), TestSyncExtension: new TestSyncExtension()  },
+        },
+        'IHGFEDCBA');
 
       finish(done);
     });
