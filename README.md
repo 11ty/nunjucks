@@ -6,6 +6,7 @@ A temporary fork of Mozilla `nunjucks` with the following changes:
   - Removes precompile CLI (`commander` dependency)
   - Removes `watch` option (`chokidar` dependency)
   - Node 20+ minimum
+  - Removes the [slim bundle](https://mozilla.github.io/nunjucks/api.html#recommended-setups) for simplicity (it is not used in Build Awesome/11ty).
 
 [Nunjucks](https://mozilla.github.io/nunjucks/) is a full featured
 templating engine for javascript. It is heavily inspired by
