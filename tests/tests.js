@@ -1,7 +1,7 @@
 (function() {
   'use strict';
 
-  var expect, util, render, equal;
+  var expect, util, render, equal, finish;
 
   if (typeof require !== 'undefined') {
     expect = globalThis.expect;
@@ -13,6 +13,7 @@
 
   render = util.render;
   equal = util.equal;
+  finish = util.finish;
 
   describe('tests', function() {
     it('callable should detect callability', function() {
@@ -254,6 +255,43 @@
     it('upper should detect whether or not a string is uppercased', function() {
       expect(render('{{ "FOOBAR" is upper }}')).toBe('true');
       expect(render('{{ "Foobar" is upper }}')).toBe('false');
+    });
+
+    it('should render async extensions inside macro', function(done) {
+      function AsyncExtension() {
+        this.tags = ['asyncextension'];
+
+        this.parse = function(parser, nodes, lexer) {
+          var tok, args, body, errorBody;
+          tok = parser.nextToken();
+          args = parser.parseSignature(null, true);
+          parser.advanceAfterBlockEnd(tok.value);
+          body = parser.parseUntilBlocks('error', 'endasyncextension');
+          errorBody = null;
+
+          if (parser.skipSymbol('error')) {
+            parser.skip(lexer.TOKEN_BLOCK_END);
+            errorBody = parser.parseUntilBlocks('endasyncextension');
+          }
+
+          parser.advanceAfterBlockEnd();
+
+          return new nodes.CallExtensionAsync(this, 'run', args, [body, errorBody]);
+        };
+
+        this.run = function(context, url, body, errorBody, callback) {
+          callback(null, 'Foo async extension content');
+        };
+      }
+
+      let contents = '{% macro wrap() %}{{ caller() }}{% endmacro %}' +
+        '{% call wrap() %}{% asyncextension "foobar" %}1{% error %}2{% endasyncextension %}{% endcall %}';
+
+      equal(contents, null,
+        { extensions: { AsyncExtension: new AsyncExtension() } },
+        'Foo async extension content');
+
+      finish(done);
     });
   });
 }());
