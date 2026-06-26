@@ -2,7 +2,7 @@
 
 var path = require('path');
 var express = require('express');
-var expect = require('expect.js');
+var expect = globalThis.expect;
 var request = require('supertest');
 var nunjucks = require('../nunjucks/index');
 
@@ -19,7 +19,7 @@ describe('express', function() {
   });
 
   it('should have reference to nunjucks env', function() {
-    expect(app.settings.nunjucksEnv).to.be(env);
+    expect(app.settings.nunjucksEnv).toBe(env);
   });
 
   it('should render a view with extension', function(done) {

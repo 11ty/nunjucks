@@ -10,16 +10,15 @@
   var render;
   var equal;
   var finish;
-  var isSlim;
 
   if (typeof require !== 'undefined') {
-    expect = require('expect.js');
+    expect = globalThis.expect;
     util = require('./util');
     Template = require('../nunjucks/src/environment').Template;
     Environment = require('../nunjucks/src/environment').Environment;
     fs = require('fs');
   } else {
-    expect = window.expect;
+    expect = globalThis.expect;
     util = window.util;
     Template = nunjucks.Template;
     Environment = nunjucks.Environment;
@@ -28,7 +27,6 @@
   render = util.render;
   equal = util.equal;
   finish = util.finish;
-  isSlim = util.isSlim;
   Loader = util.Loader;
 
   describe('compiler', function() {
@@ -562,7 +560,7 @@
           },
           opts,
           function(err, res) {
-            expect(res).to.be('somecontenthere');
+            expect(res).toBe('somecontenthere');
           });
 
         render('{% if tmpl %}{{ tmpl | getContents }}{% endif %}',
@@ -571,7 +569,7 @@
           },
           opts,
           function(err, res) {
-            expect(res).to.be('somecontenthere');
+            expect(res).toBe('somecontenthere');
           });
 
         render('{% if tmpl | getContents %}yes{% endif %}',
@@ -580,7 +578,7 @@
           },
           opts,
           function(err, res) {
-            expect(res).to.be('yes');
+            expect(res).toBe('yes');
           });
 
         render('{% for t in [tmpl, tmpl] %}{{ t | getContents }}*{% endfor %}',
@@ -589,7 +587,7 @@
           },
           opts,
           function(err, res) {
-            expect(res).to.be('somecontenthere*somecontenthere*');
+            expect(res).toBe('somecontenthere*somecontenthere*');
           });
 
         render('{% for t in [tmpl, tmpl] | getContentsArr %}{{ t }}{% endfor %}',
@@ -598,7 +596,7 @@
           },
           opts,
           function(err, res) {
-            expect(res).to.be('somecontenthere');
+            expect(res).toBe('somecontenthere');
           });
 
         render('{% if test %}{{ tmpl | getContents }}{% endif %}oof',
@@ -607,7 +605,7 @@
           },
           opts,
           function(err, res) {
-            expect(res).to.be('oof');
+            expect(res).toBe('oof');
           });
 
         render(
@@ -619,7 +617,7 @@
           },
           opts,
           function(err, res) {
-            expect(res).to.be('somecontenthere*somecontenthere*');
+            expect(res).toBe('somecontenthere*somecontenthere*');
           });
 
         render('{% block content %}{{ tmpl | getContents }}{% endblock %}',
@@ -628,7 +626,7 @@
           },
           opts,
           function(err, res) {
-            expect(res).to.be('somecontenthere');
+            expect(res).toBe('somecontenthere');
           });
 
         render('{% block content %}hello{% endblock %} {{ tmpl | getContents }}',
@@ -637,7 +635,7 @@
           },
           opts,
           function(err, res) {
-            expect(res).to.be('hello somecontenthere');
+            expect(res).toBe('hello somecontenthere');
           });
 
         render('{% block content %}{% set foo = tmpl | getContents %}{{ foo }}{% endblock %}',
@@ -646,7 +644,7 @@
           },
           opts,
           function(err, res) {
-            expect(res).to.be('somecontenthere');
+            expect(res).toBe('somecontenthere');
           });
 
         render('{% block content %}{% include "async.njk" %}{% endblock %}',
@@ -655,7 +653,7 @@
           },
           opts,
           function(err, res) {
-            expect(res).to.be('somecontenthere\n');
+            expect(res).toBe('somecontenthere\n');
           });
 
         render('{% asyncEach i in [0, 1] %}{% include "async.njk" %}{% endeach %}',
@@ -664,7 +662,7 @@
           },
           opts,
           function(err, res) {
-            expect(res).to.be('somecontenthere\nsomecontenthere\n');
+            expect(res).toBe('somecontenthere\nsomecontenthere\n');
           });
 
         render('{% asyncAll i in [0, 1, 2, 3, 4] %}-{{ i }}:{% include "async.njk" %}-{% endall %}',
@@ -673,7 +671,7 @@
           },
           opts,
           function(err, res) {
-            expect(res).to.be('-0:somecontenthere\n-' +
+            expect(res).toBe('-0:somecontenthere\n-' +
               '-1:somecontenthere\n-' +
               '-2:somecontenthere\n-' +
               '-3:somecontenthere\n-' +
@@ -770,8 +768,8 @@
           noThrow: true
         },
         function(err, res) {
-          expect(res).to.be(undefined);
-          expect(err).to.match(
+          expect(res).toBe(undefined);
+          expect(String(err)).toMatch(
             /Cannot use "in" operator to search for "a" in unexpected types\./
           );
         }
@@ -784,8 +782,8 @@
           noThrow: true
         },
         function(err, res) {
-          expect(res).to.be(undefined);
-          expect(err).to.match(
+          expect(res).toBe(undefined);
+          expect(String(err)).toMatch(
             /Cannot use "in" operator to search for "a" in unexpected types\./
           );
         }
@@ -794,64 +792,62 @@
       finish(done);
     });
 
-    if (!isSlim) {
-      it('should throw exceptions when called synchronously', function() {
-        var tmpl = new Template('{% from "doesnotexist" import foo %}');
-        function templateRender() {
-          tmpl.render();
-        }
-        expect(templateRender).to.throwException(/template not found: doesnotexist/);
+    it('should throw exceptions when called synchronously', function() {
+      var tmpl = new Template('{% from "doesnotexist" import foo %}');
+      function templateRender() {
+        tmpl.render();
+      }
+      expect(templateRender).toThrow(/template not found: doesnotexist/);
+    });
+
+    it('should include error line in raised TemplateError', function(done) {
+      var tmplStr = [
+        '{% set items = ["a", "b",, "c"] %}',
+        '{{ items | join(",") }}',
+      ].join('\n');
+
+      var loader = new Loader('tests/templates');
+      var env = new Environment(loader);
+      var tmpl = new Template(tmplStr, env, 'parse-error.njk');
+
+      tmpl.render({}, function(err, res) {
+        expect(res).toBe(undefined);
+        expect(err.toString()).toBe([
+          'Template render error: (parse-error.njk) [Line 1, Column 26]',
+          '  unexpected token: ,',
+        ].join('\n'));
+        done();
       });
+    });
 
-      it('should include error line in raised TemplateError', function(done) {
-        var tmplStr = [
-          '{% set items = ["a", "b",, "c"] %}',
-          '{{ items | join(",") }}',
-        ].join('\n');
+    it('should include error line when exception raised in user function', function(done) {
+      var tmplStr = [
+        '{% block content %}',
+        '<div>{{ foo() }}</div>',
+        '{% endblock %}',
+      ].join('\n');
+      var env = new Environment(new Loader('tests/templates'));
+      var tmpl = new Template(tmplStr, env, 'user-error.njk');
 
-        var loader = new Loader('tests/templates');
-        var env = new Environment(loader);
-        var tmpl = new Template(tmplStr, env, 'parse-error.njk');
+      function foo() {
+        throw new Error('ERROR');
+      }
 
-        tmpl.render({}, function(err, res) {
-          expect(res).to.be(undefined);
-          expect(err.toString()).to.be([
-            'Template render error: (parse-error.njk) [Line 1, Column 26]',
-            '  unexpected token: ,',
-          ].join('\n'));
-          done();
-        });
+      tmpl.render({foo: foo}, function(err, res) {
+        expect(res).toBe(undefined);
+        expect(err.toString()).toBe([
+          'Template render error: (user-error.njk) [Line 1, Column 11]',
+          '  Error: ERROR',
+        ].join('\n'));
+        done();
       });
-
-      it('should include error line when exception raised in user function', function(done) {
-        var tmplStr = [
-          '{% block content %}',
-          '<div>{{ foo() }}</div>',
-          '{% endblock %}',
-        ].join('\n');
-        var env = new Environment(new Loader('tests/templates'));
-        var tmpl = new Template(tmplStr, env, 'user-error.njk');
-
-        function foo() {
-          throw new Error('ERROR');
-        }
-
-        tmpl.render({foo: foo}, function(err, res) {
-          expect(res).to.be(undefined);
-          expect(err.toString()).to.be([
-            'Template render error: (user-error.njk) [Line 1, Column 11]',
-            '  Error: ERROR',
-          ].join('\n'));
-          done();
-        });
-      });
-    }
+    });
 
     it('should throw exceptions from included templates when called synchronously', function() {
       function templateRender() {
         render('{% include "broken-import.njk" %}', {str: 'abc'});
       }
-      expect(templateRender).to.throwException(/template not found: doesnotexist/);
+      expect(templateRender).toThrow(/template not found: doesnotexist/);
     });
 
     it('should pass errors from included templates to callback when async', function(done) {
@@ -860,8 +856,8 @@
         {str: 'abc'},
         {noThrow: true},
         function(err, res) {
-          expect(err).to.match(/template not found: doesnotexist/);
-          expect(res).to.be(undefined);
+          expect(String(err)).toMatch(/template not found: doesnotexist/);
+          expect(res).toBe(undefined);
           done();
         });
     });
@@ -1240,7 +1236,7 @@
         '{% block notReal %}{{ foo() }}{% endblock %}',
         { foo: function() { count++; } },
         function() {
-          expect(count).to.be(0);
+          expect(count).toBe(0);
         });
 
       finish(done);
@@ -1286,7 +1282,7 @@
           '{% block test %}{% endblock %}');
       };
 
-      expect(func).to.throwException(/Block "test" defined more than once./);
+      expect(func).toThrow(/Block "test" defined more than once./);
 
       finish(done);
     });
@@ -1436,8 +1432,8 @@
           noThrow: true
         },
         function(err, res) {
-          expect(res).to.be(undefined);
-          expect(err).to.match(/template not found: missing.njk/);
+          expect(res).toBe(undefined);
+          expect(String(err)).toMatch(/template not found: missing.njk/);
         }
       );
 
@@ -1678,7 +1674,7 @@
           noThrow: true
         },
         function(err) {
-          expect(err).to.match(/cannot import 'boozle'/);
+          expect(String(err)).toMatch(/cannot import 'boozle'/);
         });
 
       finish(done);
@@ -1941,7 +1937,7 @@
           autoescape: true
         },
         function(err, res) {
-          expect(res).to.be('&lt;&gt;&amp; and &lt;&gt;');
+          expect(res).toBe('&lt;&gt;&amp; and &lt;&gt;');
         }
       );
 
@@ -1953,7 +1949,7 @@
           autoescape: true
         },
         function(err, res) {
-          expect(res).to.be('<>& and &lt;&gt;');
+          expect(res).toBe('<>& and &lt;&gt;');
         }
       );
 
@@ -1969,7 +1965,7 @@
           autoescape: true
         },
         function(err, res) {
-          expect(res).to.be('<b>Foo</b>');
+          expect(res).toBe('<b>Foo</b>');
         }
       );
 
@@ -2014,7 +2010,7 @@
           autoescape: true
         },
         function(err, res) {
-          expect(res).to.be('<b>Foo</b>');
+          expect(res).toBe('<b>Foo</b>');
         }
       );
 
@@ -2033,7 +2029,7 @@
           }
         },
         function(err, res) {
-          expect(res).to.be('3');
+          expect(res).toBe('3');
         }
       );
 
@@ -2056,8 +2052,8 @@
         {foo: 'bar'},
         {noThrow: true},
         function(err, res) {
-          expect(res).to.be(undefined);
-          expect(err).to.match(/Unable to call `\w+`, which is not a function/);
+          expect(res).toBe(undefined);
+          expect(String(err)).toMatch(/Unable to call `\w+`, which is not a function/);
         });
 
       finish(done);
@@ -2071,8 +2067,8 @@
           noThrow: true
         },
         function(err, res) {
-          expect(res).to.be(undefined);
-          expect(err).to.match(/Unable to call `\w+`, which is undefined or falsey/);
+          expect(res).toBe(undefined);
+          expect(String(err)).toMatch(/Unable to call `\w+`, which is undefined or falsey/);
         }
       );
 
@@ -2087,8 +2083,8 @@
           noThrow: true
         },
         function(err, res) {
-          expect(res).to.be(undefined);
-          expect(err).to.match(/Unable to call `\w+`, which is undefined or falsey/);
+          expect(res).toBe(undefined);
+          expect(String(err)).toMatch(/Unable to call `\w+`, which is undefined or falsey/);
         }
       );
 
@@ -2101,8 +2097,8 @@
         { list: [1, 2, 3] },
         { noThrow: true },
         function(err, res) {
-          expect(res).to.be(undefined);
-          expect(err).to.match(/Unable to call `\w+`, which is undefined or falsey/);
+          expect(res).toBe(undefined);
+          expect(String(err)).toMatch(/Unable to call `\w+`, which is undefined or falsey/);
         }
       );
 
@@ -2156,7 +2152,7 @@
         '' +
         '{# calling macro2 #}' +
         '{{macro2("this should be outputted") }}', {}, {}, function(err, res) {
-          expect(res.trim()).to.eql('this should be outputted');
+          expect(res.trim()).toEqual('this should be outputted');
         });
 
       finish(done);
@@ -2174,7 +2170,7 @@
         '' +
         '{# calling macro2 #}' +
         '{{macro2("this should not be outputted") }}', {}, {}, function(err, res) {
-          expect(res.trim()).to.eql('foo');
+          expect(res.trim()).toEqual('foo');
         });
 
       finish(done);
@@ -2192,7 +2188,7 @@
         '{% endcall %}' +
         '{% endmacro %}' +
         '{{ outside("foobar") }}', {}, {}, function(err, res) {
-          expect(res.trim()).to.eql('foobar\nfoobar');
+          expect(res.trim()).toEqual('foobar\nfoobar');
         });
 
       finish(done);
@@ -2211,88 +2207,86 @@
         '{% endmacro %}' +
         '{{ outside() }}' +
         '{{ var }}', {}, {}, function(err, res) {
-          expect(res.trim()).to.eql('expected');
+          expect(res.trim()).toEqual('expected');
         });
 
       finish(done);
     });
 
 
-    if (!isSlim) {
-      it('should import template objects', function(done) {
-        var tmpl = new Template('{% macro foo() %}Inside a macro{% endmacro %}' +
-          '{% set bar = "BAZ" %}');
+    it('should import template objects', function(done) {
+      var tmpl = new Template('{% macro foo() %}Inside a macro{% endmacro %}' +
+        '{% set bar = "BAZ" %}');
 
-        equal(
-          '{% import tmpl as imp %}' +
-          '{{ imp.foo() }} {{ imp.bar }}',
-          {
-            tmpl: tmpl
-          },
-          'Inside a macro BAZ');
+      equal(
+        '{% import tmpl as imp %}' +
+        '{{ imp.foo() }} {{ imp.bar }}',
+        {
+          tmpl: tmpl
+        },
+        'Inside a macro BAZ');
 
-        equal(
-          '{% from tmpl import foo as baz, bar %}' +
-          '{{ bar }} {{ baz() }}',
-          {
-            tmpl: tmpl
-          },
-          'BAZ Inside a macro');
+      equal(
+        '{% from tmpl import foo as baz, bar %}' +
+        '{{ bar }} {{ baz() }}',
+        {
+          tmpl: tmpl
+        },
+        'BAZ Inside a macro');
 
-        finish(done);
-      });
+      finish(done);
+    });
 
-      it('should inherit template objects', function(done) {
-        var tmpl = new Template('Foo{% block block1 %}Bar{% endblock %}' +
-          '{% block block2 %}Baz{% endblock %}Whizzle');
+    it('should inherit template objects', function(done) {
+      var tmpl = new Template('Foo{% block block1 %}Bar{% endblock %}' +
+        '{% block block2 %}Baz{% endblock %}Whizzle');
 
-        equal('hola {% extends tmpl %} fizzle mumble',
-          {
-            tmpl: tmpl
-          },
-          'FooBarBazWhizzle');
+      equal('hola {% extends tmpl %} fizzle mumble',
+        {
+          tmpl: tmpl
+        },
+        'FooBarBazWhizzle');
 
-        equal(
-          '{% extends tmpl %}' +
-          '{% block block1 %}BAR{% endblock %}' +
-          '{% block block2 %}BAZ{% endblock %}',
-          {
-            tmpl: tmpl
-          },
-          'FooBARBAZWhizzle');
+      equal(
+        '{% extends tmpl %}' +
+        '{% block block1 %}BAR{% endblock %}' +
+        '{% block block2 %}BAZ{% endblock %}',
+        {
+          tmpl: tmpl
+        },
+        'FooBARBAZWhizzle');
 
-        finish(done);
-      });
+      finish(done);
+    });
 
-      it('should include template objects', function(done) {
-        var tmpl = new Template('FooInclude {{ name }}');
+    it('should include template objects', function(done) {
+      var tmpl = new Template('FooInclude {{ name }}');
 
-        equal('hello world {% include tmpl %}',
-          {
-            name: 'thedude',
-            tmpl: tmpl
-          },
-          'hello world FooInclude thedude');
+      equal('hello world {% include tmpl %}',
+        {
+          name: 'thedude',
+          tmpl: tmpl
+        },
+        'hello world FooInclude thedude');
 
-        finish(done);
-      });
+      finish(done);
+    });
 
-      it('should throw an error when invalid expression whitespaces are used', function(done) {
-        render(
-          ' {{ 2 + 2- }}',
-          {},
-          {
-            noThrow: true
-          },
-          function(err, res) {
-            expect(res).to.be(undefined);
-            expect(err).to.match(/unexpected token: }}/);
-          }
-        );
+    it('should throw an error when invalid expression whitespaces are used', function(done) {
+      render(
+        ' {{ 2 + 2- }}',
+        {},
+        {
+          noThrow: true
+        },
+        function(err, res) {
+          expect(res).toBe(undefined);
+          expect(String(err)).toMatch(/unexpected token: }}/);
+        }
+      );
 
-        finish(done);
-      });
-    }
+      finish(done);
+    });
   });
 
   describe('the filter tag', function() {

@@ -6,11 +6,11 @@
   var lexer;
 
   if (typeof require !== 'undefined') {
-    expect = require('expect.js');
+    expect = globalThis.expect;
     lib = require('../nunjucks/src/lib');
     lexer = require('../nunjucks/src/lexer');
   } else {
-    expect = window.expect;
+    expect = globalThis.expect;
     lib = nunjucks.lib;
     lexer = nunjucks.lexer;
   }
@@ -30,21 +30,21 @@
       }
 
       if (lib.isArray(type)) {
-        expect(tok.type).to.be(type[0]);
-        expect(tok.value).to.be(type[1]);
+        expect(tok.type).toBe(type[0]);
+        expect(tok.value).toBe(type[1]);
       } else if (lib.isObject(type)) {
-        expect(tok.type).to.be(type.type);
+        expect(tok.type).toBe(type.type);
         if (type.value != null) {
-          expect(tok.value).to.be(type.value);
+          expect(tok.value).toBe(type.value);
         }
         if (type.lineno != null) {
-          expect(tok.lineno).to.be(type.lineno);
+          expect(tok.lineno).toBe(type.lineno);
         }
         if (type.colno != null) {
-          expect(tok.colno).to.be(type.colno);
+          expect(tok.colno).toBe(type.colno);
         }
       } else {
-        expect(tok.type).to.be(type);
+        expect(tok.type).toBe(type);
       }
     }
   }
@@ -64,13 +64,13 @@
 
     it('should parse template data', function() {
       tok = lexer.lex('3').nextToken();
-      expect(tok.type).to.be(lexer.TOKEN_DATA);
-      expect(tok.value).to.be('3');
+      expect(tok.type).toBe(lexer.TOKEN_DATA);
+      expect(tok.value).toBe('3');
 
       tmpl = 'foo bar bizzle 3 [1,2] !@#$%^&*()<>?:"{}|';
       tok = lexer.lex(tmpl).nextToken();
-      expect(tok.type).to.be(lexer.TOKEN_DATA);
-      expect(tok.value).to.be(tmpl);
+      expect(tok.type).toBe(lexer.TOKEN_DATA);
+      expect(tok.value).toBe(tmpl);
     });
 
     it('should keep track of whitespace', function() {
@@ -186,8 +186,8 @@
       tok = tokens.nextToken();
       tok = tokens.nextToken();
       tok = tokens.nextToken();
-      expect(tok.type).to.be(lexer.TOKEN_SYMBOL);
-      expect(tok.value).to.be('foo');
+      expect(tok.type).toBe(lexer.TOKEN_SYMBOL);
+      expect(tok.value).toBe('foo');
     });
 
     it('should parse block start and end', function() {

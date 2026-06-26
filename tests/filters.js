@@ -10,12 +10,12 @@
   var finish;
 
   if (typeof require !== 'undefined') {
-    expect = require('expect.js');
+    expect = globalThis.expect;
     util = require('./util');
     lib = require('../nunjucks/src/lib');
     r = require('../nunjucks/src/runtime');
   } else {
-    expect = window.expect;
+    expect = globalThis.expect;
     util = window.util;
     lib = nunjucks.lib;
     r = nunjucks.runtime;
@@ -401,7 +401,7 @@
             throwOnUndefined: true
           }
         );
-      }).to.throwError(/groupby: attribute "a\.b\.c" resolved to undefined/);
+      }).toThrow(/groupby: attribute "a\.b\.c" resolved to undefined/);
 
       finish(done);
     });
@@ -611,7 +611,8 @@
       for (i = 0; i < 100; i++) {
         render('{{ [1,2,3,4,5,6,7,8,9] | random }}', function(err, res) {
           var val = parseInt(res, 10);
-          expect(val).to.be.within(1, 9);
+          expect(val).toBeGreaterThanOrEqual(1);
+          expect(val).toBeLessThanOrEqual(9);
         });
       }
 
@@ -855,7 +856,7 @@
             throwOnUndefined: true
           }
         );
-      }).to.throwError(/sort: attribute "meta\.age" resolved to undefined/);
+      }).toThrow(/sort: attribute "meta\.age" resolved to undefined/);
 
       finish(done);
     });

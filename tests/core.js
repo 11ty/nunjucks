@@ -8,13 +8,13 @@
     path;
 
   if (typeof require !== 'undefined') {
-    expect = require('expect.js');
+    expect = globalThis.expect;
     nunjucks = require('../nunjucks/index');
     fs = require('fs');
     path = require('path');
     os = require('os');
   } else {
-    expect = window.expect;
+    expect = globalThis.expect;
     nunjucks = window.nunjucks;
   }
 
@@ -77,10 +77,10 @@
       nunjucks.configure(tempdir);
 
       writeFile(tempdir + '/test.html', '{{ name }}');
-      expect(nunjucks.render('test.html', {name: 'foo'})).to.be('foo');
+      expect(nunjucks.render('test.html', {name: 'foo'})).toBe('foo');
 
       writeFile(tempdir + '/test.html', '{{ name }}-changed');
-      expect(nunjucks.render('test.html', {name: 'foo'})).to.be('foo');
+      expect(nunjucks.render('test.html', {name: 'foo'})).toBe('foo');
     });
 
     it('should not cache templates with {noCache: true}', function() {
@@ -91,10 +91,10 @@
       nunjucks.configure(tempdir, {noCache: true});
 
       writeFile(tempdir + '/test.html', '{{ name }}');
-      expect(nunjucks.render('test.html', {name: 'foo'})).to.be('foo');
+      expect(nunjucks.render('test.html', {name: 'foo'})).toBe('foo');
 
       writeFile(tempdir + '/test.html', '{{ name }}-changed');
-      expect(nunjucks.render('test.html', {name: 'foo'})).to.be('foo-changed');
+      expect(nunjucks.render('test.html', {name: 'foo'})).toBe('foo-changed');
     });
   });
 }());

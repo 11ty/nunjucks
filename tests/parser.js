@@ -7,12 +7,12 @@
     parser;
 
   if (typeof require !== 'undefined') {
-    expect = require('expect.js');
+    expect = globalThis.expect;
     lib = require('../nunjucks/src/lib');
     nodes = require('../nunjucks/src/nodes');
     parser = require('../nunjucks/src/parser');
   } else {
-    expect = window.expect;
+    expect = globalThis.expect;
     lib = nunjucks.lib;
     nodes = nunjucks.nodes;
     parser = nunjucks.parser;
@@ -23,16 +23,16 @@
     // TODO: Clean this up (seriously, really)
     /* eslint-disable vars-on-top */
 
-    expect(node1.typename).to.be(node2.typename);
+    expect(node1.typename).toBe(node2.typename);
 
     if (node2 instanceof nodes.NodeList) {
       var lit = ': num-children: ';
       var sig2 = (node2.typename + lit + node2.children.length);
 
-      expect(node1.children).to.be.ok();
+      expect(node1.children).toBeTruthy();
       var sig1 = (node1.typename + lit + node1.children.length);
 
-      expect(sig1).to.be(sig2);
+      expect(sig1).toBe(sig2);
 
       for (var n = 0, l = node2.children.length; n < l; n++) {
         _isAST(node1.children[n], node2.children[n]);
@@ -44,13 +44,13 @@
         if (value instanceof nodes.Node) {
           _isAST(ofield, value);
         } else if (lib.isArray(ofield) && lib.isArray(value)) {
-          expect('num-children: ' + ofield.length).to.be('num-children: ' + value.length);
+          expect('num-children: ' + ofield.length).toBe('num-children: ' + value.length);
 
           lib.each(ofield, function(v, i) {
             if (ofield[i] instanceof nodes.Node) {
               _isAST(ofield[i], value[i]);
             } else if (ofield[i] !== null && value[i] !== null) {
-              expect(ofield[i]).to.be(value[i]);
+              expect(ofield[i]).toBe(value[i]);
             }
           });
         } else if ((ofield !== null || value !== null) &&
@@ -68,12 +68,12 @@
           // We want good errors and tracebacks, so test on
           // whichever object exists
           if (!ofield) {
-            expect(value).to.be(ofield);
+            expect(value).toBe(ofield);
           } else if (ofield !== null && ofield instanceof RegExp) {
             // This conditional check for RegExp is needed because /a/ != /a/
-            expect(String(ofield)).to.be(String(value));
+            expect(String(ofield)).toBe(String(value));
           } else {
-            expect(ofield).to.be(value);
+            expect(ofield).toBe(value);
           }
         }
       });
@@ -294,52 +294,52 @@
     it('should parse blocks', function() {
       var n = parser.parse('want some {% if hungry %}pizza{% else %}' +
         'water{% endif %}?');
-      expect(n.children[1].typename).to.be('If');
+      expect(n.children[1].typename).toBe('If');
 
       n = parser.parse('{% block foo %}stuff{% endblock %}');
-      expect(n.children[0].typename).to.be('Block');
+      expect(n.children[0].typename).toBe('Block');
 
       n = parser.parse('{% block foo %}stuff{% endblock foo %}');
-      expect(n.children[0].typename).to.be('Block');
+      expect(n.children[0].typename).toBe('Block');
 
       n = parser.parse('{% extends "test.njk" %}stuff');
-      expect(n.children[0].typename).to.be('Extends');
+      expect(n.children[0].typename).toBe('Extends');
 
       n = parser.parse('{% include "test.njk" %}');
-      expect(n.children[0].typename).to.be('Include');
+      expect(n.children[0].typename).toBe('Include');
     });
 
     it('should accept attributes and methods of static arrays, objects and primitives', function() {
       expect(function() {
         parser.parse('{{ ([1, 2, 3]).indexOf(1) }}');
-      }).to.not.throwException();
+      }).not.toThrow();
 
       expect(function() {
         parser.parse('{{ [1, 2, 3].length }}');
-      }).to.not.throwException();
+      }).not.toThrow();
 
       expect(function() {
         parser.parse('{{ "Some String".replace("S", "$") }}');
-      }).to.not.throwException();
+      }).not.toThrow();
 
       expect(function() {
         parser.parse('{{ ({ name : "Khalid" }).name }}');
-      }).to.not.throwException();
+      }).not.toThrow();
 
       expect(function() {
         parser.parse('{{ 1.618.toFixed(2) }}');
-      }).to.not.throwException();
+      }).not.toThrow();
     });
 
     it('should parse include tags', function() {
       var n = parser.parse('{% include "test.njk" %}');
-      expect(n.children[0].typename).to.be('Include');
+      expect(n.children[0].typename).toBe('Include');
 
       n = parser.parse('{% include "test.html"|replace("html","j2") %}');
-      expect(n.children[0].typename).to.be('Include');
+      expect(n.children[0].typename).toBe('Include');
 
       n = parser.parse('{% include ""|default("test.njk") %}');
-      expect(n.children[0].typename).to.be('Include');
+      expect(n.children[0].typename).toBe('Include');
     });
 
     it('should parse for loops', function() {
@@ -808,55 +808,55 @@
     it('should throw errors', function() {
       expect(function() {
         parser.parse('hello {{ foo');
-      }).to.throwException(/expected variable end/);
+      }).toThrow(/expected variable end/);
 
       expect(function() {
         parser.parse('hello {% if');
-      }).to.throwException(/expected expression/);
+      }).toThrow(/expected expression/);
 
       expect(function() {
         parser.parse('hello {% if sdf zxc');
-      }).to.throwException(/expected block end/);
+      }).toThrow(/expected block end/);
 
       expect(function() {
         parser.parse('{% include "foo %}');
-      }).to.throwException(/expected block end/);
+      }).toThrow(/expected block end/);
 
       expect(function() {
         parser.parse('hello {% if sdf %} data');
-      }).to.throwException(/expected elif, else, or endif/);
+      }).toThrow(/expected elif, else, or endif/);
 
       expect(function() {
         parser.parse('hello {% block sdf %} data');
-      }).to.throwException(/expected endblock/);
+      }).toThrow(/expected endblock/);
 
       expect(function() {
         parser.parse('hello {% block sdf %} data{% endblock foo %}');
-      }).to.throwException(/expected block end/);
+      }).toThrow(/expected block end/);
 
       expect(function() {
         parser.parse('hello {% bar %} dsfsdf');
-      }).to.throwException(/unknown block tag/);
+      }).toThrow(/unknown block tag/);
 
       expect(function() {
         parser.parse('{{ foo(bar baz) }}');
-      }).to.throwException(/expected comma after expression/);
+      }).toThrow(/expected comma after expression/);
 
       expect(function() {
         parser.parse('{% import "foo" %}');
-      }).to.throwException(/expected "as" keyword/);
+      }).toThrow(/expected "as" keyword/);
 
       expect(function() {
         parser.parse('{% from "foo" %}');
-      }).to.throwException(/expected import/);
+      }).toThrow(/expected import/);
 
       expect(function() {
         parser.parse('{% from "foo" import bar baz %}');
-      }).to.throwException(/expected comma/);
+      }).toThrow(/expected comma/);
 
       expect(function() {
         parser.parse('{% from "foo" import _bar %}');
-      }).to.throwException(/names starting with an underscore cannot be imported/);
+      }).toThrow(/names starting with an underscore cannot be imported/);
     });
 
     it('should parse custom tags', function() {

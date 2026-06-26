@@ -6,11 +6,11 @@
     precompileString;
 
   if (typeof require !== 'undefined') {
-    expect = require('expect.js');
+    expect = globalThis.expect;
     precompile = require('../nunjucks/src/precompile').precompile;
     precompileString = require('../nunjucks/src/precompile').precompileString;
   } else {
-    expect = window.expect;
+    expect = globalThis.expect;
     precompile = nunjucks.precompile;
     precompileString = nunjucks.precompileString;
   }
@@ -19,7 +19,7 @@
     it('should return a string', function() {
       expect(precompileString('{{ test }}', {
         name: 'test.njk'
-      })).to.be.an('string');
+      })).toBeTypeOf('string');
     });
 
     describe('templates', function() {
@@ -32,7 +32,7 @@
           }
         });
 
-        expect(fileName).to.equal('./tests/templates/item.njk');
+        expect(fileName).toBe('./tests/templates/item.njk');
       });
 
       it('should return *NIX path seperators, when name is passed as option', function() {
@@ -46,7 +46,7 @@
           }
         });
 
-        expect(fileName).to.equal('path/to/file.j2');
+        expect(fileName).toBe('path/to/file.j2');
       });
     });
   });

@@ -9,17 +9,17 @@
   var path;
 
   if (typeof require !== 'undefined') {
-    expect = require('expect.js');
+    expect = globalThis.expect;
     util = require('./util');
     Environment = require('../nunjucks/src/environment').Environment;
     Loader = require('../nunjucks/src/node-loaders').FileSystemLoader;
     templatesPath = 'tests/templates';
     path = require('path');
   } else {
-    expect = window.expect;
+    expect = globalThis.expect;
     Environment = nunjucks.Environment;
     Loader = nunjucks.WebLoader;
-    templatesPath = '../templates';
+    templatesPath = '/test-templates';
   }
 
   describe('api', function() {
@@ -27,7 +27,7 @@
       var env = new Environment(new Loader(templatesPath));
 
       var child = env.getTemplate('base-inherit.njk');
-      expect(child.render()).to.be('Foo*Bar*BazFizzle');
+      expect(child.render()).toBe('Foo*Bar*BazFizzle');
     });
 
     it('should only call the callback once when conditional import fails', function(done) {
@@ -35,7 +35,7 @@
       var called = 0;
       env.render('broken-conditional-include.njk',
         function() {
-          expect(++called).to.be(1);
+          expect(++called).toBe(1);
         }
       );
       setTimeout(done, 0);
@@ -54,8 +54,8 @@
       child1 = env.getTemplate('relative/test1.njk');
       child2 = env.getTemplate('relative/test2.njk');
 
-      expect(child1.render()).to.be('FooTest1BazFizzle');
-      expect(child2.render()).to.be('FooTest2BazFizzle');
+      expect(child1.render()).toBe('FooTest1BazFizzle');
+      expect(child2.render()).toBe('FooTest2BazFizzle');
     });
 
     it('should handle correctly cache for relative paths', function() {
@@ -68,7 +68,7 @@
       env = new Environment(new Loader(templatesPath));
       test = env.getTemplate('relative/test-cache.njk');
 
-      expect(util.normEOL(test.render())).to.be('Test1\nTest2');
+      expect(util.normEOL(test.render())).toBe('Test1\nTest2');
     });
 
     it('should handle correctly relative paths in renderString', function() {
@@ -80,13 +80,13 @@
       env = new Environment(new Loader(templatesPath));
       expect(env.renderString('{% extends "./relative/test1.njk" %}{% block block1 %}Test3{% endblock %}', {}, {
         path: path.resolve(templatesPath, 'string.njk')
-      })).to.be('FooTest3BazFizzle');
+      })).toBe('FooTest3BazFizzle');
     });
 
     it('should emit "load" event on Environment instance', function(done) {
       var env = new Environment(new Loader(templatesPath));
       env.on('load', function(name, source) {
-        expect(name).to.equal('item.njk');
+        expect(name).toBe('item.njk');
         done();
       });
       env.render('item.njk', {});

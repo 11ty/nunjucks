@@ -1,18 +1,9 @@
 {
   "presets": [
     ["@babel/env", {
-      "loose": true,
-      "targets": {
-        "browsers": ["last 2 versions"],
-        "node": "20"
-      }
+      "targets": "last 2 versions, node 20"
     }]
   ],
-  "env": {
-    "test": {
-      "plugins": ["istanbul"]
-    }
-  },
   "ignore": [
     "scripts/lib/arrow-function-coverage-fix.js"
   ]
