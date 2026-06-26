@@ -6,24 +6,13 @@
 var path = require('path');
 var webpack = require('webpack');
 var pjson = require('../package.json');
-var promiseSequence = require('./lib/utils').promiseSequence;
 var TEST_ENV = (process.env.NODE_ENV === 'test');
 
 var destDir = path.resolve(path.join(
   __dirname,
   (TEST_ENV) ? '../tests/browser' : '../browser'));
 
-function runWebpack(opts) {
-  var type = (opts.slim) ? '(slim, only works with precompiled templates)' : '';
-  if (opts.min) {
-    throw new Error('Minified files were removed.');
-  }
-  var ext = '.js';
-  if (opts.slim) {
-    ext = '-slim' + ext;
-  }
-  var filename = 'nunjucks' + ext;
-
+function runWebpack() {
   return new Promise(function(resolve, reject) {
     try {
       var config = {
@@ -33,7 +22,7 @@ function runWebpack(opts) {
         target: ['web', 'es5'],
         output: {
           path: destDir,
-          filename: filename,
+          filename: 'nunjucks.js',
           library: 'nunjucks',
           libraryTarget: 'umd',
           devtoolModuleFilenameTemplate: function(info) {
@@ -53,13 +42,8 @@ function runWebpack(opts) {
                     if (sourcePath.match(/^(fs|path|chokidar)$/)) {
                       return 'node-libs-browser/mock/empty';
                     }
-                    if (opts.slim) {
-                      if (sourcePath.match(/(nodes|lexer|parser|precompile|transformer|compiler)(\.js)?$/)) {
-                        return 'node-libs-browser/mock/empty';
-                      }
-                    }
                     if (sourcePath.match(/\/loaders(\.js)?$/)) {
-                      return sourcePath.replace('loaders', (opts.slim) ? 'precompiled-loader' : 'web-loaders');
+                      return sourcePath.replace('loaders', 'web-loaders');
                     }
                     return null;
                   },
@@ -70,11 +54,10 @@ function runWebpack(opts) {
         },
         plugins: [
           new webpack.BannerPlugin(
-            'Browser bundle of nunjucks ' + pjson.version + ' ' + type
+            'Browser bundle of nunjucks ' + pjson.version
           ),
           new webpack.DefinePlugin({
             'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV || 'production'),
-            'process.env.BUILD_TYPE': JSON.stringify((opts.slim) ? 'SLIM' : 'STD'),
           }),
         ]
       };
@@ -92,19 +75,10 @@ function runWebpack(opts) {
   });
 }
 
-var runConfigs = [
-  {min: false, slim: false},
-  {min: false, slim: true}
-];
-
-var promises = runConfigs.map(function(opts) {
-  return function() {
-    return runWebpack(opts).then(function(stats) {
-      console.log(stats); // eslint-disable-line no-console
-    });
-  };
-});
-
-promiseSequence(promises).catch(function(err) {
-  throw err;
-});
+runWebpack()
+  .then(function(stats) {
+    console.log(stats); // eslint-disable-line no-console
+  })
+  .catch(function(err) {
+    throw err;
+  });

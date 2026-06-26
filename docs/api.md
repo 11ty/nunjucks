@@ -587,10 +587,7 @@ default.
 ### Recommended Setups
 
 These are two of the most popular ways to set up nunjucks on the
-client-side. Note that there are two different js files: one with the
-compiler, nunjucks.js, and one without the compiler, nunjucks-slim.js.
-Read [Getting Started](getting-started.html) for a brief overview of
-the differences.
+client-side using [nunjucks.js](files/nunjucks.js).
 
 See [Precompiling](#precompiling) for information on precompiling
 templates.
@@ -606,13 +603,6 @@ precompiled templates in production.
 3. When pushing to production, [precompile](#precompiling) the templates into a js file
    and load it on the page
 
-> An optimization is to use `nunjucks-slim.js` instead of
-> `nunjucks.js` in production since you are using precompiled
-> templates there. It's 8K instead of 20K because it doesn't contain
-> the compiler. This complicates the setup though because you are
-> using different js files between dev and prod, so it may or may not
-> be worth it.
-
 #### Setup #2: always precompile
 
 This method always uses precompiled templates while developing and in
@@ -623,7 +613,7 @@ unless you want to manually recompile them after every change.
 1. For development, use the [grunt](https://github.com/jlongster/grunt-nunjucks) or
 [gulp](https://github.com/sindresorhus/gulp-nunjucks) tasks to watch your template
 directory for changes and automatically [precompile](#precompiling) them into a js file
-2. Load [nunjucks-slim.js](files/nunjucks-slim.js) and `templates.js`, or whatever you named
+2. Load [nunjucks.js](files/nunjucks.js) and `templates.js`, or whatever you named
 the precompiled js file, with either a script tag or a module loader.
 3. Render templates ([example](#simple-api))!
 

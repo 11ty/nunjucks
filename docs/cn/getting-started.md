@@ -15,13 +15,9 @@ $ npm install nunjucks
 
 ## 浏览器端使用
 
-可直接使用 [nunjucks.js](files/nunjucks.js)，如果针对编译后的模板可使用 [nunjucks-slim.js](files/nunjucks-slim.js)。
+可直接使用 [nunjucks.js](files/nunjucks.js)。
 
-### 你应该使用哪个文件
-
-* **nunjucks.js** 可用于动态加载模板，当模板变化时重新加载，也可以用于预编译后的模板。包含编译器，所以会比较大 (20K min/gzipped)。如果你刚接触 nunjucks 可使用这个文件，如果你不在意大小也可以在生产环境使用。
-
-* **nunjucks-slim.js** 只能用于预编译后的模板，只包含运行时的代码，所以比较小 (8K min/gzipped)。一般用于生产环境，如果你使用 [grunt](https://github.com/jlongster/grunt-nunjucks) 或[gulp](https://github.com/sindresorhus/gulp-nunjucks)任务自动预编译，也可以在开发环境使用。
+**nunjucks.js** 可用于动态加载模板，当模板变化时重新加载，也可以用于预编译后的模板。包含编译器，所以会比较大 (20K min/gzipped)。在生产环境中，你可以将模板[预编译](api.html#precompiling)成 js 文件，这样运行时就不需要编译器；通常配合 [grunt](https://github.com/jlongster/grunt-nunjucks) 或 [gulp](https://github.com/sindresorhus/gulp-nunjucks) 任务在开发时自动重新预编译。
 
 直接用 `script` 引入文件：
 

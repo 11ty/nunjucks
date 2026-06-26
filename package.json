@@ -37,11 +37,11 @@
     "build:transpile": "babel nunjucks --out-dir .",
     "build:bundle": "node scripts/bundle.js",
     "build": "npm run build:transpile && npm run build:bundle",
-    "build:test": "cross-env NODE_ENV=test node scripts/bundle.js && node scripts/precompile-test-templates.js",
+    "build:test": "cross-env NODE_ENV=test node scripts/bundle.js",
     "lint": "eslint --flag v10_config_lookup_from_file nunjucks scripts tests",
     "prepare": "npm run build",
     "test:node": "vitest run --project node",
-    "test:browser": "npm run build:test && vitest run --project browser --project browser-slim",
+    "test:browser": "npm run build:test && vitest run --project browser",
     "test:watch": "vitest",
     "coverage": "vitest run --project node --coverage",
     "test": "npm run lint && npm run build:test && vitest run"

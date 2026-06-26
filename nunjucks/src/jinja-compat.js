@@ -7,7 +7,6 @@ function installCompat() {
   // references the nunjucks instance
   var runtime = this.runtime;
   var lib = this.lib;
-  // Handle slim case where these 'modules' are excluded from the built source
   var Compiler = this.compiler.Compiler;
   var Parser = this.parser.Parser;
   var nodes = this.nodes;
@@ -60,7 +59,7 @@ function installCompat() {
     };
   }
 
-  if (process.env.BUILD_TYPE !== 'SLIM' && nodes && Compiler && Parser) { // i.e., not slim mode
+  if (nodes && Compiler && Parser) {
     const Slice = nodes.Node.extend('Slice', {
       fields: ['start', 'stop', 'step'],
       init(lineno, colno, start, stop, step) {

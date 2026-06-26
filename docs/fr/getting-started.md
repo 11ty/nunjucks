@@ -20,22 +20,15 @@ maintenance.
 
 ## Lorsque nous sommes dans un navigateur ...
 
-Utilisez [nunjucks.js](../files/nunjucks.js) pour avoir l’intégralité de la bibliothèque ou
-[nunjucks-slim.js](../files/nunjucks-slim.js) pour avoir une version allégée
-qui fonctionne uniquement avec les templates précompilés.
+Utilisez [nunjucks.js](../files/nunjucks.js) et incluez-le dans la page.
 
-### Quel fichier devez-vous utiliser ?
-
-* Utilisez **nunjucks.js** pour charger dynamiquement les templates, pour auto-recharger
-  les templates quand ils sont modifiés, et pour utiliser les templates précompilés.
-  Comme le fichier est livré avec le compilateur complet, il est plus volumineux (20K min/gzipped).
-  Utilisez-le pour commencer et vous pouvez vous en servir en production si la taille du
-  fichier ne vous dérange pas.
-
-* Utilisez **nunjucks-slim.js** pour charger et utiliser les templates précompilés. Comme
-  le fichier est livré uniquement avec le runtime, il est plus petit (8K min/gzipped), mais il fonctionne
-  *seulement* avec les templates précompilés. Généralement utilisé en production, il est quand même possible
-  de s’en servir en développement à condition de lancer la tâche [grunt](https://github.com/jlongster/grunt-nunjucks) ou [gulp](https://github.com/sindresorhus/gulp-nunjucks) pour recompiler automatiquement les templates.
+**nunjucks.js** permet de charger dynamiquement les templates, de les auto-recharger
+quand ils sont modifiés, et d’utiliser les templates précompilés. Le fichier est livré
+avec le compilateur complet (20K min/gzipped). En production, vous pouvez
+[précompiler](api.html#prcompilation) vos templates dans un fichier js pour que le
+compilateur ne soit pas exécuté à l’exécution ; cela se combine généralement avec la
+tâche [grunt](https://github.com/jlongster/grunt-nunjucks) ou [gulp](https://github.com/sindresorhus/gulp-nunjucks)
+pour recompiler automatiquement les templates pendant le développement.
 
 Il suffit d’inclure nunjucks avec une balise `script` dans la page :
 

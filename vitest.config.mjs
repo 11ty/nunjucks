@@ -4,8 +4,8 @@ import { serveTestTemplates } from './tests/serve-templates-plugin.mjs';
 
 // These tests carry a Mocha-era structure (UMD/IIFE bodies, `done` callbacks,
 // `this.skip()`), bridged to Vitest by tests/vitest.setup.js. The same files run
-// in three projects: against the source under Node, and against the prebuilt
-// browser bundles (full + slim) under a real browser via Playwright.
+// in two projects: against the source under Node, and against the prebuilt
+// browser bundle under a real browser via Playwright.
 
 // Node runs every spec. core/express/precompile are Node-only.
 const NODE_FILES = [
@@ -38,16 +38,6 @@ const BROWSER_FULL_FILES = [
   'tests/tests.js',
 ];
 
-// Mirrors tests/browser/slim.html (slim build has no lexer/parser/compiler).
-const BROWSER_SLIM_FILES = [
-  'tests/compiler.js',
-  'tests/runtime.js',
-  'tests/filters.js',
-  'tests/globals.js',
-  'tests/jinja-compat.js',
-  'tests/tests.js',
-];
-
 export default defineConfig({
   test: {
     projects: [
@@ -69,26 +59,6 @@ export default defineConfig({
           setupFiles: [
             './tests/vitest.setup.js',
             './tests/vitest.setup.browser-full.js',
-            './tests/util.js',
-          ],
-          browser: {
-            enabled: true,
-            provider: playwright(),
-            headless: true,
-            screenshotFailures: false,
-            instances: [{ browser: 'chromium' }],
-          },
-        },
-      },
-      {
-        plugins: [serveTestTemplates()],
-        test: {
-          name: 'browser-slim',
-          globals: true,
-          include: BROWSER_SLIM_FILES,
-          setupFiles: [
-            './tests/vitest.setup.js',
-            './tests/vitest.setup.browser-slim.js',
             './tests/util.js',
           ],
           browser: {

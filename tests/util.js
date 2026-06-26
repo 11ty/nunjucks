@@ -4,34 +4,22 @@
   'use strict';
 
   var nunjucks,
-    nunjucksFull,
-    isSlim = false,
     Environment,
     Template,
     Loader,
-    precompileString,
     templatesPath;
 
   // `expect` is provided globally by Vitest (config has `globals: true`).
 
   if (typeof window === 'undefined') {
-    nunjucks = nunjucksFull = require('../nunjucks/index.js');
+    nunjucks = require('../nunjucks/index.js');
     Loader = nunjucks.FileSystemLoader;
     templatesPath = 'tests/templates';
   } else {
     nunjucks = window.nunjucks;
-    if (window.nunjucksFull) {
-      isSlim = true;
-      nunjucksFull = window.nunjucksFull;
-      // These must be the same for instanceof checks to succeed
-      nunjucksFull.runtime.SafeString.prototype = nunjucks.runtime.SafeString.prototype;
-    } else {
-      nunjucksFull = window.nunjucksFull = nunjucks;
-    }
-    Loader = nunjucksFull.WebLoader;
+    Loader = nunjucks.WebLoader;
     templatesPath = '/test-templates';
   }
-  precompileString = nunjucksFull.precompileString;
   Environment = nunjucks.Environment;
   Template = nunjucks.Template;
 
@@ -61,16 +49,11 @@
   }
 
   function jinjaEqual(str, ctx, str2, env) {
-    var jinjaUninstalls = [nunjucks.installJinjaCompat()];
-    if (nunjucksFull !== nunjucks) {
-      jinjaUninstalls.push(nunjucksFull.installJinjaCompat());
-    }
+    var jinjaUninstall = nunjucks.installJinjaCompat();
     try {
       return equal(str, ctx, str2, env);
     } finally {
-      for (var i = 0; i < jinjaUninstalls.length; i++) {
-        jinjaUninstalls[i]();
-      }
+      jinjaUninstall();
     }
   }
 
@@ -87,11 +70,6 @@
       return str;
     }
     return str.replace(/\r\n|\r/g, '\n');
-  }
-
-  function randomTemplateName() {
-    var rand = Math.random().toString(36).replace(/[^a-z]+/g, '').substr(0, 5);
-    return rand + '.njk';
   }
 
   // eslint-disable-next-line consistent-return
@@ -113,16 +91,8 @@
     opts = opts || {};
     opts.dev = true;
 
-    var loader;
-    var e;
-
-    if (isSlim) {
-      e = env || new Environment([], opts);
-      loader = e.loaders[0];
-    } else {
-      loader = new Loader(templatesPath);
-      e = env || new Environment(loader, opts);
-    }
+    var loader = new Loader(templatesPath);
+    var e = env || new Environment(loader, opts);
 
     var name;
     if (opts.filters) {
@@ -149,27 +119,9 @@
       }
     }
 
-    var tmplName;
-    if (isSlim) {
-      tmplName = randomTemplateName();
-      var precompileJs = precompileString(str, {
-        name: tmplName,
-        asFunction: true,
-        env: e
-      });
-      eval(precompileJs); // eslint-disable-line no-eval
-    }
-
     ctx = ctx || {};
 
-    var t;
-
-    if (isSlim) {
-      var tmplSource = loader.getSource(tmplName);
-      t = new Template(tmplSource.src, e, tmplSource.path);
-    } else {
-      t = new Template(str, e);
-    }
+    var t = new Template(str, e);
 
     if (!cb) {
       return t.render(ctx);
@@ -207,7 +159,6 @@
     module.exports.jinjaEqual = jinjaEqual;
     module.exports.finish = finish;
     module.exports.normEOL = normEOL;
-    module.exports.isSlim = isSlim;
     module.exports.Loader = Loader;
   } else {
     window.util = {
@@ -216,7 +167,6 @@
       jinjaEqual: jinjaEqual,
       finish: finish,
       normEOL: normEOL,
-      isSlim: isSlim,
       Loader: Loader,
     };
   }

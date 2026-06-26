@@ -423,7 +423,7 @@ var MyLoader = nunjucks.Loader.extend({
 
 ### Recommended Setups
 
-在客户端，有两种最常用的方式来初始设置 nunjucks。注意这是两个不同的文件，其中一个包括编译器 nunjucks.js，另一个不包括 nunjucks-slim.js。查看 [Getting Started](getting-started.html) 区分两者。
+在客户端，有两种最常用的方式来初始设置 nunjucks，都使用 [nunjucks.js](files/nunjucks.js)。
 
 查看 [Precompiling](#precompiling) 了解预编译。
 
@@ -435,16 +435,12 @@ var MyLoader = nunjucks.Loader.extend({
 2. 渲染模板 ([example](#simple-api))!
 3. 当发布到生产环境时，When pushing to production, 将模板[预编译](#precompiling) 成 js 文件。
 
-> 在生产环境中，你可以使用 `nunjucks-slim.js` 代替 `nunjucks.js` 进行优化，因为你使用了预编译的模板。
-> `nunjucks-slim.js` 只有 8K 而不是 20K，因为不包括编译器。
-> 但是这使初始设置复杂化了，因为在开发和生产环境需要不同的 js 文件，是否值得完全在你如何使用。
-
 #### Setup #2: always precompile
 
 这个方法是在开发和生产环境都使用预编译的模板，这样可以简化初始设置。但是在开发时，你需要一些工具来自动预编译，而不是手动编译。
 
 1. 开发时，使用 [grunt](https://github.com/jlongster/grunt-nunjucks)或[gulp](https://github.com/sindresorhus/gulp-nunjucks) 监听文件目录，当文件变化后自动编译成 js 文件。
-2. 使用 script 或模块加载器加载 [nunjucks-slim.js](files/nunjucks-slim.js) 和你编译的 js 文件（如 `templates.js`）。
+2. 使用 script 或模块加载器加载 [nunjucks.js](files/nunjucks.js) 和你编译的 js 文件（如 `templates.js`）。
 3. 渲染模板 ([example](#simple-api))!
 
 使用这个方法，开发和生产环境无区别，只需提交 templates.js 并部署到生产环境。

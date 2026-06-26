@@ -577,10 +577,7 @@ par défaut.
 ### Configurations recommandées
 
 Ce sont les deux moyens les plus populaires pour mettre en place nunjucks
-côté client. Notez qu'il y a deux fichiers js différents : l'un avec le
-compilateur nunjucks.js, et l'autre sans le compilateur nunjucks-slim.js.
-Lisez [Prise en main](getting-started.html) pour un bref aperçu des
-différences.
+côté client avec [nunjucks.js](../files/nunjucks.js).
 
 Voir [Précompilation](#prcompilation) pour des informations sur la
 précompilation des templates.
@@ -596,13 +593,6 @@ des templates précompilés en production.
 3. Lorsque vous mettez en production, [précompilez](#prcompilation) les templates dans un fichier js
    et chargez les dans la page
 
-> Une optimisation est d'utiliser `nunjucks-slim.js` au lieu de
-> `nunjucks.js` en production puisque vous utilisez ici des templates
-> précompilés. Il fait 8K au lieu de 20K parce qu'il ne contient pas
-> le compilateur. Cela complique la configuration car vous utilisez
-> des fichiers js différents entre la dev et la prod, ça vaut peut-être
-> le coup ou pas.
-
 #### Configuration n°2 : toujours précompilé
 
 Cette méthode utilise toujours des templates précompilés lors du développement et en
@@ -613,7 +603,7 @@ vous voulez les recompiler manuellement après chaque changement.
 1. Pour le développement, utilisez les tâches [grunt](https://github.com/jlongster/grunt-nunjucks) ou [gulp](https://github.com/sindresorhus/gulp-nunjucks) qui surveilleront
 les modifications de votre répertoire de template et automatiquement les [précompileront](#prcompilation)
 dans un fichier js
-2. Chargez [nunjucks-slim.js](../files/nunjucks-slim.js) et `templates.js`, ou tout ce que vous avez
+2. Chargez [nunjucks.js](../files/nunjucks.js) et `templates.js`, ou tout ce que vous avez
 nommé comme fichier js précompilé, avec soit une balise script ou un chargeur de module.
 3. Rendez les templates ([par exemple](#api-simplifie))!
 
