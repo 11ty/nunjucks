@@ -1,6 +1,6 @@
 'use strict';
 
-const waterfall = require('a-sync-waterfall');
+const waterfall = require('./a-sync-waterfall.js');
 const lib = require('./lib');
 const compiler = require('./compiler');
 const filters = require('./filters');
