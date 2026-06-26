@@ -5,7 +5,10 @@
   "publishConfig": {
     "access": "public"
   },
-  "author": "James Long <longster@gmail.com>",
+  "author": "James Long (https://jlongster.com/)",
+  "contributors": [
+    "Zach Leatherman (https://zachleat.com)"
+  ],
   "main": "index.js",
   "browser": "./browser/nunjucks.js",
   "devDependencies": {
