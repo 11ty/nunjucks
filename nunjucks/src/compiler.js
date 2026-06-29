@@ -226,8 +226,10 @@ class Compiler extends Obj {
       args.children.forEach((arg) => {
         // Tag arguments are passed normally to the call. Note that keyword
         // arguments are turned into a single js object as the last argument.
-        this._emit(',');
-        this._compileExpression(arg, frame);
+        if(arg) {
+          this._emit(',');
+          this._compileExpression(arg, frame);
+        }
       });
     }
 
