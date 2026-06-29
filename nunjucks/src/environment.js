@@ -469,14 +469,6 @@ class Template extends Obj {
     return promise;
   }
 
-  // async-only variant: no callback argument, always returns a Promise<string>.
-  async renderAsync(ctx, parentFrame) {
-    if (Array.prototype.some.call(arguments, lib.isFunction)) {
-      throw new Error('renderAsync() does not accept a callback; it returns a Promise. Use render() for the callback API.');
-    }
-    return this.render(ctx, parentFrame);
-  }
-
   getExported(ctx, parentFrame, cb) {
     if (typeof ctx === 'function') {
       cb = ctx;
