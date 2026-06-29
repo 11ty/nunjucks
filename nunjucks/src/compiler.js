@@ -192,10 +192,44 @@ class Compiler extends Obj {
     }
   }
 
+  // Render a body into a fresh buffer through a continuation so that any
+  // asynchronous work it contains resolves before the buffer is consumed.
+  // A scope level is added, so code emitted after this call is nested in the
+  // continuation. Returns the buffer id holding the fully-rendered content.
+  //
+  // This is the shared primitive that lets synchronous, value-consuming tags
+  // (paired extensions, {% set %}/{% filter %} capture blocks) contain async
+  // children: the body is rendered up front, then handed over as a plain
+  // string rather than via a thunk that would return before async completes.
+  _renderToBuffer(node, frame) {
+    const id = this._tmpid();
+    this._emitLine(`var ${id} = "";`);
+    this._emitLine('(function(cb) {');
+    this._emitLine('if(!cb) { cb = function(err) { if(err) { throw err; }}}');
+
+    const prevBuffer = this.buffer;
+    this.buffer = id;
+    this._withScopedSyntax(() => {
+      this.compile(node, frame);
+      this._emitLine('cb(null);');
+    });
+    this.buffer = prevBuffer;
+
+    this._emitLine('})(' + this._makeCallback());
+    this._addScopeLevel();
+    return id;
+  }
+
   compileCallExtension(node, frame, async) {
     var args = node.args;
     var contentArgs = node.contentArgs;
     var autoescape = typeof node.autoescape === 'boolean' ? node.autoescape : true;
+
+    // Synchronous extensions receive their content via the return value of a
+    // thunk, which cannot observe async work that resolves on a later tick.
+    // Render each content body up front so the thunk just returns the result.
+    const bufferIds = async ? null : contentArgs.map(
+      (arg) => (arg ? this._renderToBuffer(arg, frame) : null));
 
     if (!async) {
       this._emit(`${this.buffer} += runtime.suppressValue(`);
@@ -233,18 +267,27 @@ class Compiler extends Obj {
         }
 
         if (arg) {
-          this._emitLine('function(cb) {');
-          this._emitLine('if(!cb) { cb = function(err) { if(err) { throw err; }}}');
-          const id = this._pushBuffer();
+          if (async) {
+            // Async extensions get the lazy thunk: they already drive the
+            // callback chain themselves.
+            this._emitLine('function(cb) {');
+            this._emitLine('if(!cb) { cb = function(err) { if(err) { throw err; }}}');
+            const id = this._pushBuffer();
 
-          this._withScopedSyntax(() => {
-            this.compile(arg, frame);
-            this._emitLine(`cb(null, ${id});`);
-          });
+            this._withScopedSyntax(() => {
+              this.compile(arg, frame);
+              this._emitLine(`cb(null, ${id});`);
+            });
 
-          this._popBuffer();
-          this._emitLine(`return ${id};`);
-          this._emitLine('}');
+            this._popBuffer();
+            this._emitLine(`return ${id};`);
+            this._emitLine('}');
+          } else {
+            // Content already rendered into bufferIds[i]; hand back a thunk
+            // that returns it (also supporting the optional callback form).
+            this._emit(
+              `function(cb) { if(cb) { cb(null, ${bufferIds[i]}); } return ${bufferIds[i]}; }`);
+          }
         } else {
           this._emit('null');
         }
@@ -547,9 +590,10 @@ class Compiler extends Obj {
       this._compileExpression(node.value, frame);
       this._emitLine(';');
     } else {
-      this._emit(ids.join(' = ') + ' = ');
-      this.compile(node.body, frame);
-      this._emitLine(';');
+      // {% set x %}…{% endset %} capture block. Render the body through a
+      // continuation so async children resolve before the assignment.
+      const bufId = this._renderToBuffer(node.body.body, frame);
+      this._emitLine(ids.join(' = ') + ' = ' + bufId + ';');
     }
 
     node.targets.forEach((target, i) => {

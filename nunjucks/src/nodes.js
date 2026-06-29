@@ -108,7 +108,10 @@ const Super = Node.extend('Super', { fields: ['blockName', 'symbol'] });
 const TemplateRef = Node.extend('TemplateRef', { fields: ['template'] });
 const Extends = TemplateRef.extend('Extends');
 const Include = Node.extend('Include', { fields: ['template', 'ignoreMissing'] });
-const Set = Node.extend('Set', { fields: ['targets', 'value'] });
+// `body` is the capture block for `{% set x %}…{% endset %}` (null for the
+// `{% set x = expr %}` form). It is a declared field so the transformer
+// descends into it and lifts async filters inside the capture.
+const Set = Node.extend('Set', { fields: ['targets', 'value', 'body'] });
 const Switch = Node.extend('Switch', { fields: ['expr', 'cases', 'default'] });
 const Case = Node.extend('Case', { fields: ['cond', 'body'] });
 const Output = NodeList.extend('Output');

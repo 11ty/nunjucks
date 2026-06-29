@@ -80,7 +80,9 @@ function _liftFilters(node, asyncFilters, prop) {
       return descNode;
     } else if ((descNode instanceof nodes.Filter &&
       lib.indexOf(asyncFilters, descNode.name.value) !== -1) ||
-      descNode instanceof nodes.FilterAsync) {
+      // Changed in https://github.com/11ty/nunjucks/issues/10
+      descNode instanceof nodes.FilterAsync/* ||
+      descNode instanceof nodes.CallExtensionAsync*/) {
       symbol = new nodes.Symbol(descNode.lineno,
         descNode.colno,
         gensym());
@@ -128,6 +130,46 @@ function liftFilters(ast, asyncFilters) {
     } else {
       return undefined;
     }
+  });
+}
+
+// Lift any Capture block out of an expression (e.g. the body of a
+// `{% filter %}` block, which parses to Output(Filter([Capture, …]))) into a
+// preceding `{% set %}` statement, replacing it with a reference symbol. The
+// Set renders the capture through a continuation, so async work inside the
+// captured body resolves before the surrounding (synchronous) filter consumes
+// it. Captures that are already a Set body are statement-level and untouched.
+function _liftCaptures(node) {
+  var children = [];
+
+  // Top-down walk: returning a symbol for a Capture stops descent into its
+  // body, so captures nested inside this one are left intact (they are lifted
+  // when the outer pass visits their own Output).
+  var walked = walk(node, (descNode) => {
+    if (descNode instanceof nodes.Capture) {
+      const symbol = new nodes.Symbol(descNode.lineno, descNode.colno, '_' + gensym());
+      const setNode = new nodes.Set(descNode.lineno, descNode.colno, [symbol]);
+      setNode.value = null;
+      setNode.body = descNode;
+      children.push(setNode);
+      return symbol;
+    }
+    return undefined;
+  });
+
+  if (children.length) {
+    children.push(walked);
+    return new nodes.NodeList(node.lineno, node.colno, children);
+  }
+  return node;
+}
+
+function liftCaptures(ast) {
+  return depthWalk(ast, (node) => {
+    if (node instanceof nodes.Output) {
+      return _liftCaptures(node);
+    }
+    return undefined;
   });
 }
 
@@ -200,7 +242,10 @@ function convertStatements(ast) {
 }
 
 function cps(ast, asyncFilters) {
-  return convertStatements(liftSuper(liftFilters(ast, asyncFilters)));
+  // liftCaptures runs first so a {% filter %} body becomes a statement-level
+  // {% set %} before liftFilters runs; otherwise an async filter inside the
+  // body would be hoisted across the capture boundary.
+  return convertStatements(liftSuper(liftFilters(liftCaptures(ast), asyncFilters)));
 }
 
 function transform(ast, asyncFilters) {

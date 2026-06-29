@@ -677,6 +677,48 @@
               '-3:somecontenthere\n-' +
               '-4:somecontenthere\n-');
           });
+
+        // Async work inside a {% set %} capture block resolves before the
+        // captured value is consumed, and the value can be reused.
+        render('{% set x %}{{ tmpl | getContents }}{% endset %}[{{ x }}{{ x }}]',
+          {
+            tmpl: 'tests/templates/for-async-content.njk'
+          },
+          opts,
+          function(err, res) {
+            expect(res).toBe('[somecontentheresomecontenthere]');
+          });
+
+        // Async work inside a {% filter %} block resolves before the
+        // (synchronous) filter runs over the captured body.
+        render('{% filter upper %}{{ tmpl | getContents }}{% endfilter %}',
+          {
+            tmpl: 'tests/templates/for-async-content.njk'
+          },
+          opts,
+          function(err, res) {
+            expect(res).toBe('SOMECONTENTHERE');
+          });
+
+        // Nested {% filter %} blocks, async in the innermost body.
+        render('{% filter upper %}a{% filter trim %}{{ tmpl | getContents }} {% endfilter %}b{% endfilter %}',
+          {
+            tmpl: 'tests/templates/for-async-content.njk'
+          },
+          opts,
+          function(err, res) {
+            expect(res).toBe('ASOMECONTENTHEREB');
+          });
+
+        // {% filter %} block nested inside an {% if %}.
+        render('{% if tmpl %}{% filter upper %}{{ tmpl | getContents }}{% endfilter %}{% endif %}',
+          {
+            tmpl: 'tests/templates/for-async-content.njk'
+          },
+          opts,
+          function(err, res) {
+            expect(res).toBe('SOMECONTENTHERE');
+          });
       }
 
       finish(done);
