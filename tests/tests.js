@@ -266,10 +266,9 @@
 
         this.run = function(context, url, body, callback) {
           body(function (e, bodyContent) {
-            // TODO this does not yet work due to macro use
-            // setTimeout(() => {
+            setTimeout(() => {
               callback(null, 'Foo async extension content');
-            // });
+            });
           });
         };
       }
