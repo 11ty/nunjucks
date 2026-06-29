@@ -250,7 +250,7 @@
       equal('{{ "bob" | float("cat") }}', 'cat');
     });
 
-    it('groupby', function(done) {
+    it('groupby', async function() {
       const namesContext = {
         items: [{
           name: 'james',
@@ -393,17 +393,13 @@
         ':undefined:jamesjohnjimjessie'
       );
 
-      expect(function() {
-        render(
-          undefinedTemplate,
-          namesContext,
-          {
-            throwOnUndefined: true
-          }
-        );
-      }).toThrow(/groupby: attribute "a\.b\.c" resolved to undefined/);
-
-      finish(done);
+      await expect(render(
+        undefinedTemplate,
+        namesContext,
+        {
+          throwOnUndefined: true
+        }
+      )).rejects.toThrow(/groupby: attribute "a\.b\.c" resolved to undefined/);
     });
 
     it('indent', function(done) {
@@ -803,7 +799,7 @@
       finish(done);
     });
 
-    it('sort', function(done) {
+    it('sort', async function() {
       equal('{% for i in [3,5,2,1,4,6] | sort %}{{ i }}{% endfor %}',
         '123456');
 
@@ -842,23 +838,19 @@
         'fredjohnjames'
       );
 
-      expect(function() {
-        render(
-          nestedAttributeSortTemplate,
-          {
-            items: [
-              {name: 'james', meta: {age: 25}},
-              {name: 'fred', meta: {age: 18}},
-              {name: 'john', meta: {title: 'Developer'}}
-            ]
-          },
-          {
-            throwOnUndefined: true
-          }
-        );
-      }).toThrow(/sort: attribute "meta\.age" resolved to undefined/);
-
-      finish(done);
+      await expect(render(
+        nestedAttributeSortTemplate,
+        {
+          items: [
+            {name: 'james', meta: {age: 25}},
+            {name: 'fred', meta: {age: 18}},
+            {name: 'john', meta: {title: 'Developer'}}
+          ]
+        },
+        {
+          throwOnUndefined: true
+        }
+      )).rejects.toThrow(/sort: attribute "meta\.age" resolved to undefined/);
     });
 
     it('string', function(done) {

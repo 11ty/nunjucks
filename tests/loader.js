@@ -25,7 +25,7 @@
   }
 
   describe('loader', function() {
-    it('should allow a simple loader to be created', function() {
+    it('should allow a simple loader to be created', async function() {
       // From Docs: http://mozilla.github.io/nunjucks/api.html#writing-a-loader
       // We should be able to create a loader that only exposes getSource
       var env, parent;
@@ -43,7 +43,7 @@
 
       env = new Environment(new MyLoader(templatesPath));
       parent = env.getTemplate('fake.njk');
-      expect(parent.render()).toBe('Hello World');
+      expect(await parent.render()).toBe('Hello World');
     });
 
     it('should catch loader error', function(done) {
@@ -133,10 +133,10 @@
           loader.getSource('dummy-pkg/simple-template.html');
         });
 
-        it('should render templates', function() {
+        it('should render templates', async function() {
           var env = new Environment(new NodeResolveLoader());
           var tmpl = env.getTemplate('dummy-pkg/simple-template.html');
-          expect(tmpl.render({foo: 'foo'})).toBe('foo');
+          expect(await tmpl.render({foo: 'foo'})).toBe('foo');
         });
 
         it('should not allow directory traversal', function() {

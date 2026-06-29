@@ -347,6 +347,32 @@ function asyncAll(arr, dimen, func, cb) {
   }
 }
 
+// Promisify env.getTemplate (which is callback/sync based).
+function awaitTemplate(env, name, eagerCompile, parentName, ignoreMissing) {
+  return new Promise((resolve, reject) => {
+    env.getTemplate(name, eagerCompile, parentName, ignoreMissing, (err, tmpl) => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(tmpl);
+      }
+    });
+  });
+}
+
+// Promisify a callback-style async extension `ext[prop](context, ..., cb)`.
+function awaitExtension(ext, prop, args) {
+  return new Promise((resolve, reject) => {
+    ext[prop].apply(ext, args.concat([(err, res) => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(res);
+      }
+    }]));
+  });
+}
+
 function fromIterator(arr) {
   if (typeof arr !== 'object' || arr === null || Array.isArray(arr)) {
     return arr;
@@ -374,6 +400,8 @@ module.exports = {
   markSafe: markSafe,
   asyncEach: asyncEach,
   asyncAll: asyncAll,
+  awaitTemplate: awaitTemplate,
+  awaitExtension: awaitExtension,
   inOperator: lib.inOperator,
   fromIterator: fromIterator
 };

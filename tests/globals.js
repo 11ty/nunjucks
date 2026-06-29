@@ -167,20 +167,14 @@
       finish(done);
     });
 
-    it('should return errors from globals', function(done) {
+    it('should return errors from globals', async function() {
       var env = new Environment();
 
       env.addGlobal('err', function() {
         throw new Error('Global error');
       });
 
-      try {
-        render('{{ err() }}', null, {}, env);
-      } catch (e) {
-        expect(e).toBeInstanceOf(Error);
-      }
-
-      finish(done);
+      await expect(render('{{ err() }}', null, {}, env)).rejects.toThrow('Global error');
     });
   });
 }());

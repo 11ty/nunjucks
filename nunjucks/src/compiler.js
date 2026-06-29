@@ -70,7 +70,9 @@ class Compiler extends Obj {
   _emitFuncBegin(node, name) {
     this.buffer = 'output';
     this._scopeClosers = '';
-    this._emitLine(`function ${name}(env, context, frame, runtime, cb) {`);
+    // Render functions are async: async work is awaited inline rather than
+    // threaded through callbacks, and the rendered string is returned.
+    this._emitLine(`async function ${name}(env, context, frame, runtime) {`);
     this._emitLine(`var lineno = ${node.lineno};`);
     this._emitLine(`var colno = ${node.colno};`);
     this._emitLine(`var ${this.buffer} = "";`);
@@ -79,41 +81,24 @@ class Compiler extends Obj {
 
   _emitFuncEnd(noReturn) {
     if (!noReturn) {
-      this._emitLine('cb(null, ' + this.buffer + ');');
+      this._emitLine('return ' + this.buffer + ';');
     }
 
-    this._closeScopeLevels();
     this._emitLine('} catch (e) {');
-    this._emitLine('  cb(runtime.handleError(e, lineno, colno));');
+    this._emitLine('  throw runtime.handleError(e, lineno, colno);');
     this._emitLine('}');
     this._emitLine('}');
     this.buffer = null;
   }
 
-  _addScopeLevel() {
-    this._scopeClosers += '})';
-  }
+  // The scope-level machinery is a no-op under async/await: there are no
+  // nested continuation callbacks to close. Kept so call sites don't change.
+  _addScopeLevel() {}
 
-  _closeScopeLevels() {
-    this._emitLine(this._scopeClosers + ';');
-    this._scopeClosers = '';
-  }
+  _closeScopeLevels() {}
 
   _withScopedSyntax(func) {
-    var _scopeClosers = this._scopeClosers;
-    this._scopeClosers = '';
-
     func.call(this);
-
-    this._closeScopeLevels();
-    this._scopeClosers = _scopeClosers;
-  }
-
-  _makeCallback(res) {
-    var err = this._tmpid();
-
-    return 'function(' + err + (res ? ',' + res : '') + ') {\n' +
-      'if(' + err + ') { cb(' + err + '); return; }';
   }
 
   _tmpid() {
@@ -204,19 +189,12 @@ class Compiler extends Obj {
   _renderToBuffer(node, frame) {
     const id = this._tmpid();
     this._emitLine(`var ${id} = "";`);
-    this._emitLine('(function(cb) {');
-    this._emitLine('if(!cb) { cb = function(err) { if(err) { throw err; }}}');
 
     const prevBuffer = this.buffer;
     this.buffer = id;
-    this._withScopedSyntax(() => {
-      this.compile(node, frame);
-      this._emitLine('cb(null);');
-    });
+    this.compile(node, frame);
     this.buffer = prevBuffer;
 
-    this._emitLine('})(' + this._makeCallback());
-    this._addScopeLevel();
     return id;
   }
 
@@ -225,21 +203,18 @@ class Compiler extends Obj {
     var contentArgs = node.contentArgs;
     var autoescape = typeof node.autoescape === 'boolean' ? node.autoescape : true;
 
-    // Synchronous extensions receive their content via the return value of a
-    // thunk, which cannot observe async work that resolves on a later tick.
-    // Render each content body up front so the thunk just returns the result.
-    const bufferIds = async ? null : contentArgs.map(
+    // Pre-render each content body (awaiting any async work) into a buffer so
+    // the extension receives a thunk that simply returns the finished string.
+    const bufferIds = contentArgs.map(
       (arg) => (arg ? this._renderToBuffer(arg, frame) : null));
 
-    if (!async) {
-      this._emit(`${this.buffer} += runtime.suppressValue(`);
-    }
+    this._emit(`${this.buffer} += runtime.suppressValue(`);
 
-    this._emit(`env.getExtension("${node.extName}")["${node.prop}"](`);
-    this._emit('context');
-
-    if (args || contentArgs) {
-      this._emit(',');
+    if (async) {
+      // Async extensions take a trailing callback; await it through a promise.
+      this._emit(`await runtime.awaitExtension(env.getExtension("${node.extName}"), "${node.prop}", [context`);
+    } else {
+      this._emit(`env.getExtension("${node.extName}")["${node.prop}"](context`);
     }
 
     if (args) {
@@ -248,62 +223,31 @@ class Compiler extends Obj {
           'use `parser.parseSignature`');
       }
 
-      args.children.forEach((arg, i) => {
-        // Tag arguments are passed normally to the call. Note
-        // that keyword arguments are turned into a single js
-        // object as the last argument, if they exist.
+      args.children.forEach((arg) => {
+        // Tag arguments are passed normally to the call. Note that keyword
+        // arguments are turned into a single js object as the last argument.
+        this._emit(',');
         this._compileExpression(arg, frame);
-
-        if (i !== args.children.length - 1 || contentArgs.length) {
-          this._emit(',');
-        }
       });
     }
 
-    if (contentArgs.length) {
-      contentArgs.forEach((arg, i) => {
-        if (i > 0) {
-          this._emit(',');
-        }
-
-        if (arg) {
-          if (async) {
-            // Async extensions get the lazy thunk: they already drive the
-            // callback chain themselves.
-            this._emitLine('function(cb) {');
-            this._emitLine('if(!cb) { cb = function(err) { if(err) { throw err; }}}');
-            const id = this._pushBuffer();
-
-            this._withScopedSyntax(() => {
-              this.compile(arg, frame);
-              this._emitLine(`cb(null, ${id});`);
-            });
-
-            this._popBuffer();
-            this._emitLine(`return ${id};`);
-            this._emitLine('}');
-          } else {
-            // Content already rendered into bufferIds[i]; hand back a thunk
-            // that returns it (also supporting the optional callback form).
-            this._emit(
-              `function(cb) { if(cb) { cb(null, ${bufferIds[i]}); } return ${bufferIds[i]}; }`);
-          }
-        } else {
-          this._emit('null');
-        }
-      });
-    }
+    contentArgs.forEach((arg, i) => {
+      this._emit(',');
+      if (arg) {
+        this._emit(
+          `function(cb) { if(cb) { cb(null, ${bufferIds[i]}); } return ${bufferIds[i]}; }`);
+      } else {
+        this._emit('null');
+      }
+    });
 
     if (async) {
-      const res = this._tmpid();
-      this._emitLine(', ' + this._makeCallback(res));
-      this._emitLine(
-        `${this.buffer} += runtime.suppressValue(${res}, ${autoescape} && env.opts.autoescape);`);
-      this._addScopeLevel();
+      this._emit('])');
     } else {
       this._emit(')');
-      this._emit(`, ${autoescape} && env.opts.autoescape);\n`);
     }
+
+    this._emit(`, ${autoescape} && env.opts.autoescape);\n`);
   }
 
   compileCallExtensionAsync(node, frame) {
@@ -523,7 +467,7 @@ class Compiler extends Obj {
     this._emit('(lineno = ' + node.lineno +
       ', colno = ' + node.colno + ', ');
 
-    this._emit('runtime.callWrap(');
+    this._emit('await runtime.callWrap(');
     // Compile it as normal.
     this._compileExpression(node.name, frame);
 
@@ -539,24 +483,17 @@ class Compiler extends Obj {
   compileFilter(node, frame) {
     var name = node.name;
     this.assertType(name, nodes.Symbol);
-    this._emit('env.getFilter("' + name.value + '").call(context, ');
+    // Await every filter. Sync filters return a value (awaiting it is a no-op);
+    // async filters are wrapped at registration to return a Promise.
+    this._emit('(await env.getFilter("' + name.value + '").call(context, ');
     this._compileAggregate(node.args, frame);
-    this._emit(')');
+    this._emit('))');
   }
 
   compileFilterAsync(node, frame) {
-    var name = node.name;
-    var symbol = node.symbol.value;
-
-    this.assertType(name, nodes.Symbol);
-
-    frame.set(symbol, symbol);
-
-    this._emit('env.getFilter("' + name.value + '").call(context, ');
-    this._compileAggregate(node.args, frame);
-    this._emitLine(', ' + this._makeCallback(symbol));
-
-    this._addScopeLevel();
+    // Filters are now awaited inline by compileFilter, so async filters are no
+    // longer lifted into FilterAsync nodes. Retained only as a safety net.
+    this.compileFilter(node, frame);
   }
 
   compileKeywordArgs(node, frame) {
@@ -669,10 +606,8 @@ class Compiler extends Obj {
   }
 
   compileIfAsync(node, frame) {
-    this._emit('(function(cb) {');
-    this.compileIf(node, frame, true);
-    this._emit('})(' + this._makeCallback());
-    this._addScopeLevel();
+    // Under async/await a plain `if` works: the body awaits inline.
+    this.compileIf(node, frame);
   }
 
   _emitLoopBindings(node, arr, i, len) {
@@ -788,84 +723,15 @@ class Compiler extends Obj {
     this._emitLine('frame = frame.pop();');
   }
 
-  _compileAsyncLoop(node, frame, parallel) {
-    // This shares some code with the For tag, but not enough to
-    // worry about. This iterates across an object asynchronously,
-    // but not in parallel.
-
-    var i = this._tmpid();
-    var len = this._tmpid();
-    var arr = this._tmpid();
-    var asyncMethod = parallel ? 'asyncAll' : 'asyncEach';
-    frame = frame.push();
-
-    this._emitLine('frame = frame.push();');
-
-    this._emit('var ' + arr + ' = runtime.fromIterator(');
-    this._compileExpression(node.arr, frame);
-    this._emitLine(');');
-
-    if (node.name instanceof nodes.Array) {
-      const arrayLen = node.name.children.length;
-      this._emit(`runtime.${asyncMethod}(${arr}, ${arrayLen}, function(`);
-
-      node.name.children.forEach((name) => {
-        this._emit(`${name.value},`);
-      });
-
-      this._emit(i + ',' + len + ',next) {');
-
-      node.name.children.forEach((name) => {
-        const id = name.value;
-        frame.set(id, id);
-        this._emitLine(`frame.set("${id}", ${id});`);
-      });
-    } else {
-      const id = node.name.value;
-      this._emitLine(`runtime.${asyncMethod}(${arr}, 1, function(${id}, ${i}, ${len},next) {`);
-      this._emitLine('frame.set("' + id + '", ' + id + ');');
-      frame.set(id, id);
-    }
-
-    this._emitLoopBindings(node, arr, i, len);
-
-    this._withScopedSyntax(() => {
-      let buf;
-      if (parallel) {
-        buf = this._pushBuffer();
-      }
-
-      this.compile(node.body, frame);
-      this._emitLine('next(' + i + (buf ? ',' + buf : '') + ');');
-
-      if (parallel) {
-        this._popBuffer();
-      }
-    });
-
-    const output = this._tmpid();
-    this._emitLine('}, ' + this._makeCallback(output));
-    this._addScopeLevel();
-
-    if (parallel) {
-      this._emitLine(this.buffer + ' += ' + output + ';');
-    }
-
-    if (node.else_) {
-      this._emitLine('if (!' + arr + '.length) {');
-      this.compile(node.else_, frame);
-      this._emitLine('}');
-    }
-
-    this._emitLine('frame = frame.pop();');
-  }
-
+  // Under async/await, {% asyncEach %}/{% asyncAll %} compile to the same
+  // plain for-loop as {% for %}: awaits in the body suspend inline and the
+  // loop iterates sequentially. (asyncAll is no longer parallel.)
   compileAsyncEach(node, frame) {
-    this._compileAsyncLoop(node, frame);
+    this.compileFor(node, frame);
   }
 
   compileAsyncAll(node, frame) {
-    this._compileAsyncLoop(node, frame, true);
+    this.compileFor(node, frame);
   }
 
   _compileMacro(node, frame) {
@@ -904,7 +770,7 @@ class Compiler extends Obj {
       `var ${funcId} = runtime.makeMacro(`,
       `[${argNames.join(', ')}], `,
       `[${kwargNames.join(', ')}], `,
-      `function (${realNames.join(', ')}) {`,
+      `async function (${realNames.join(', ')}) {`,
       'var callerFrame = frame;',
       'frame = ' + ((keepFrame) ? 'frame.push(true);' : 'new runtime.Frame();'),
       'kwargs = kwargs || {};',
@@ -972,24 +838,20 @@ class Compiler extends Obj {
   _compileGetTemplate(node, frame, eagerCompile, ignoreMissing) {
     const parentTemplateId = this._tmpid();
     const parentName = this._templateName();
-    const cb = this._makeCallback(parentTemplateId);
     const eagerCompileArg = (eagerCompile) ? 'true' : 'false';
     const ignoreMissingArg = (ignoreMissing) ? 'true' : 'false';
-    this._emit('env.getTemplate(');
+    this._emit(`var ${parentTemplateId} = await runtime.awaitTemplate(env, `);
     this._compileExpression(node.template, frame);
-    this._emitLine(`, ${eagerCompileArg}, ${parentName}, ${ignoreMissingArg}, ${cb}`);
+    this._emitLine(`, ${eagerCompileArg}, ${parentName}, ${ignoreMissingArg});`);
     return parentTemplateId;
   }
 
   compileImport(node, frame) {
     const target = node.target.value;
     const id = this._compileGetTemplate(node, frame, false, false);
-    this._addScopeLevel();
 
-    this._emitLine(id + '.getExported(' +
-      (node.withContext ? 'context.getVariables(), frame, ' : '') +
-      this._makeCallback(id));
-    this._addScopeLevel();
+    this._emitLine(`${id} = await ${id}.getExported(` +
+      (node.withContext ? 'context.getVariables(), frame' : '') + ');');
 
     frame.set(target, id);
 
@@ -1002,12 +864,9 @@ class Compiler extends Obj {
 
   compileFromImport(node, frame) {
     const importedId = this._compileGetTemplate(node, frame, false, false);
-    this._addScopeLevel();
 
-    this._emitLine(importedId + '.getExported(' +
-      (node.withContext ? 'context.getVariables(), frame, ' : '') +
-      this._makeCallback(importedId));
-    this._addScopeLevel();
+    this._emitLine(`${importedId} = await ${importedId}.getExported(` +
+      (node.withContext ? 'context.getVariables(), frame' : '') + ');');
 
     node.names.children.forEach((nameNode) => {
       var name;
@@ -1025,7 +884,7 @@ class Compiler extends Obj {
       this._emitLine(`if(Object.prototype.hasOwnProperty.call(${importedId}, "${name}")) {`);
       this._emitLine(`var ${id} = ${importedId}.${name};`);
       this._emitLine('} else {');
-      this._emitLine(`cb(new Error("cannot import '${name}'")); return;`);
+      this._emitLine(`throw new Error("cannot import '${name}'");`);
       this._emitLine('}');
 
       frame.set(alias, id);
@@ -1051,26 +910,24 @@ class Compiler extends Obj {
     // because blocks can have side effects, but it seems like a
     // waste of performance to always execute huge top-level
     // blocks twice
+    this._emit(`var ${id} = await `);
     if (!this.inBlock) {
-      this._emit('(parentTemplate ? function(e, c, f, r, cb) { cb(""); } : ');
+      this._emit('(parentTemplate ? async function() { return ""; } : ');
     }
     this._emit(`context.getBlock("${node.name.value}")`);
     if (!this.inBlock) {
       this._emit(')');
     }
-    this._emitLine('(env, context, frame, runtime, ' + this._makeCallback(id));
+    this._emitLine('(env, context, frame, runtime);');
     this._emitLine(`${this.buffer} += ${id};`);
-    this._addScopeLevel();
   }
 
   compileSuper(node, frame) {
     var name = node.blockName.value;
     var id = node.symbol.value;
 
-    const cb = this._makeCallback(id);
-    this._emitLine(`context.getSuper(env, "${name}", b_${name}, frame, runtime, ${cb}`);
+    this._emitLine(`var ${id} = await context.getSuper(env, "${name}", b_${name}, frame, runtime);`);
     this._emitLine(`${id} = runtime.markSafe(${id});`);
-    this._addScopeLevel();
     frame.set(id, id);
   }
 
@@ -1082,37 +939,16 @@ class Compiler extends Obj {
     // extends is a dynamic tag and can occur within a block like
     // `if`, so if this happens we need to capture the parent
     // template in the top-level scope
-    this._emitLine(`parentTemplate = ${parentTemplateId}`);
+    this._emitLine(`parentTemplate = ${parentTemplateId};`);
 
     this._emitLine(`for(var ${k} in parentTemplate.blocks) {`);
     this._emitLine(`context.addBlock(${k}, parentTemplate.blocks[${k}]);`);
     this._emitLine('}');
-
-    this._addScopeLevel();
   }
 
   compileInclude(node, frame) {
-    this._emitLine('var tasks = [];');
-    this._emitLine('tasks.push(');
-    this._emitLine('function(callback) {');
     const id = this._compileGetTemplate(node, frame, false, node.ignoreMissing);
-    this._emitLine(`callback(null,${id});});`);
-    this._emitLine('});');
-
-    const id2 = this._tmpid();
-    this._emitLine('tasks.push(');
-    this._emitLine('function(template, callback){');
-    this._emitLine('template.render(context.getVariables(), frame, ' + this._makeCallback(id2));
-    this._emitLine('callback(null,' + id2 + ');});');
-    this._emitLine('});');
-
-    this._emitLine('tasks.push(');
-    this._emitLine('function(result, callback){');
-    this._emitLine(`${this.buffer} += result;`);
-    this._emitLine('callback(null);');
-    this._emitLine('});');
-    this._emitLine('env.waterfall(tasks, function(){');
-    this._addScopeLevel();
+    this._emitLine(`${this.buffer} += await ${id}.render(context.getVariables(), frame);`);
   }
 
   compileTemplateData(node, frame) {
@@ -1121,16 +957,18 @@ class Compiler extends Obj {
 
   compileCapture(node, frame) {
     // we need to temporarily override the current buffer id as 'output'
-    // so the set block writes to the capture output instead of the buffer
+    // so the set block writes to the capture output instead of the buffer.
+    // An awaited async IIFE lets the captured body contain async work even
+    // though the capture sits in expression position.
     var buffer = this.buffer;
     this.buffer = 'output';
-    this._emitLine('(function() {');
+    this._emitLine('(await (async function() {');
     this._emitLine('var output = "";');
     this._withScopedSyntax(() => {
       this.compile(node.body, frame);
     });
     this._emitLine('return output;');
-    this._emitLine('})()');
+    this._emitLine('})())');
     // and of course, revert back to the old buffer id
     this.buffer = buffer;
   }
@@ -1171,9 +1009,9 @@ class Compiler extends Obj {
     this._emitLine('var parentTemplate = null;');
     this._compileChildren(node, frame);
     this._emitLine('if(parentTemplate) {');
-    this._emitLine('parentTemplate.rootRenderFunc(env, context, frame, runtime, cb);');
+    this._emitLine('return await parentTemplate.rootRenderFunc(env, context, frame, runtime);');
     this._emitLine('} else {');
-    this._emitLine(`cb(null, ${this.buffer});`);
+    this._emitLine(`return ${this.buffer};`);
     this._emitLine('}');
     this._emitFuncEnd(true);
 

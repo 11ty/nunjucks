@@ -834,12 +834,10 @@
       finish(done);
     });
 
-    it('should throw exceptions when called synchronously', function() {
+    it('should throw exceptions when called synchronously', async function() {
+      // Rendering is now Promise-based: errors surface as a rejected promise.
       var tmpl = new Template('{% from "doesnotexist" import foo %}');
-      function templateRender() {
-        tmpl.render();
-      }
-      expect(templateRender).toThrow(/template not found: doesnotexist/);
+      await expect(tmpl.render()).rejects.toThrow(/template not found: doesnotexist/);
     });
 
     it('should include error line in raised TemplateError', function(done) {
@@ -885,11 +883,9 @@
       });
     });
 
-    it('should throw exceptions from included templates when called synchronously', function() {
-      function templateRender() {
-        render('{% include "broken-import.njk" %}', {str: 'abc'});
-      }
-      expect(templateRender).toThrow(/template not found: doesnotexist/);
+    it('should throw exceptions from included templates when called synchronously', async function() {
+      await expect(render('{% include "broken-import.njk" %}', {str: 'abc'}))
+        .rejects.toThrow(/template not found: doesnotexist/);
     });
 
     it('should pass errors from included templates to callback when async', function(done) {
@@ -1316,17 +1312,12 @@
       finish(done);
     });
 
-    it('should error if same block is defined multiple times', function(done) {
-      var func = function() {
-        render(
-          '{% extends "simple-base.njk" %}' +
-          '{% block test %}{% endblock %}' +
-          '{% block test %}{% endblock %}');
-      };
-
-      expect(func).toThrow(/Block "test" defined more than once./);
-
-      finish(done);
+    it('should error if same block is defined multiple times', async function() {
+      await expect(render(
+        '{% extends "simple-base.njk" %}' +
+        '{% block test %}{% endblock %}' +
+        '{% block test %}{% endblock %}'))
+        .rejects.toThrow(/Block "test" defined more than once./);
     });
 
     it('should render nested blocks in child template', function(done) {

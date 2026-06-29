@@ -241,11 +241,10 @@ function convertStatements(ast) {
   });
 }
 
-function cps(ast, asyncFilters) {
-  // liftCaptures runs first so a {% filter %} body becomes a statement-level
-  // {% set %} before liftFilters runs; otherwise an async filter inside the
-  // body would be hoisted across the capture boundary.
-  return convertStatements(liftSuper(liftFilters(liftCaptures(ast), asyncFilters)));
+function cps(ast, asyncFilters) { // eslint-disable-line no-unused-vars
+  // Under async/await, async filters are awaited inline by the compiler, so
+  // there is no need to lift them out of expressions (liftFilters is gone).
+  return convertStatements(liftSuper(liftCaptures(ast)));
 }
 
 function transform(ast, asyncFilters) {

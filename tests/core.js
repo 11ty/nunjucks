@@ -69,7 +69,7 @@
       }
     });
 
-    it('should cache templates by default', function() {
+    it('should cache templates by default', async function() {
       if (typeof fs === 'undefined') {
         this.skip();
         return;
@@ -77,13 +77,13 @@
       nunjucks.configure(tempdir);
 
       writeFile(tempdir + '/test.html', '{{ name }}');
-      expect(nunjucks.render('test.html', {name: 'foo'})).toBe('foo');
+      expect(await nunjucks.render('test.html', {name: 'foo'})).toBe('foo');
 
       writeFile(tempdir + '/test.html', '{{ name }}-changed');
-      expect(nunjucks.render('test.html', {name: 'foo'})).toBe('foo');
+      expect(await nunjucks.render('test.html', {name: 'foo'})).toBe('foo');
     });
 
-    it('should not cache templates with {noCache: true}', function() {
+    it('should not cache templates with {noCache: true}', async function() {
       if (typeof fs === 'undefined') {
         this.skip();
         return;
@@ -91,10 +91,10 @@
       nunjucks.configure(tempdir, {noCache: true});
 
       writeFile(tempdir + '/test.html', '{{ name }}');
-      expect(nunjucks.render('test.html', {name: 'foo'})).toBe('foo');
+      expect(await nunjucks.render('test.html', {name: 'foo'})).toBe('foo');
 
       writeFile(tempdir + '/test.html', '{{ name }}-changed');
-      expect(nunjucks.render('test.html', {name: 'foo'})).toBe('foo-changed');
+      expect(await nunjucks.render('test.html', {name: 'foo'})).toBe('foo-changed');
     });
   });
 }());

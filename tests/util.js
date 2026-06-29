@@ -25,10 +25,21 @@
 
   var numAsyncs;
   var doneHandler;
+  // Rendering is now Promise-based. equal() kicks off a render and records the
+  // assertion promise here; afterEach awaits them all so the many synchronous
+  // `equal(...)` call sites keep working without per-test changes.
+  var pending;
 
   beforeEach(function() {
     numAsyncs = 0;
     doneHandler = null;
+    pending = [];
+  });
+
+  afterEach(async function() {
+    const ps = pending;
+    pending = [];
+    await Promise.all(ps);
   });
 
   function equal(str, ctx, opts, str2, env) {
@@ -44,17 +55,23 @@
       opts = {};
     }
     opts = opts || {};
-    var res = render(str, ctx, opts, env);
-    expect(res).toBe(str2);
+    const p = Promise.resolve(render(str, ctx, opts, env)).then((res) => {
+      expect(res).toBe(str2);
+    });
+    pending.push(p);
+    return p;
   }
 
   function jinjaEqual(str, ctx, str2, env) {
     var jinjaUninstall = nunjucks.installJinjaCompat();
-    try {
-      return equal(str, ctx, str2, env);
-    } finally {
-      jinjaUninstall();
-    }
+    // Delegate to equal (which pushes the assertion promise to pending), then
+    // swap that entry for one that uninstalls jinja compat after it settles —
+    // so cleanup is awaited and doesn't leak into the next test.
+    const inner = equal(str, ctx, str2, env);
+    pending.pop();
+    const p = inner.finally(() => jinjaUninstall());
+    pending.push(p);
+    return p;
   }
 
   function finish(done) {

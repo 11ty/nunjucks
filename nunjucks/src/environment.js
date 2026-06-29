@@ -1,6 +1,5 @@
 'use strict';
 
-const waterfall = require('./a-sync-waterfall.js');
 const lib = require('./lib');
 const compiler = require('./compiler');
 const filters = require('./filters');
@@ -26,12 +25,8 @@ function callbackAsync(cb, err, res) {
 const noopTmplSrc = {
   type: 'code',
   obj: {
-    root(env, context, frame, runtime, cb) {
-      try {
-        cb(null, '');
-      } catch (e) {
-        cb(handleError(e, null, null));
-      }
+    async root(env, context, frame, runtime) {
+      return '';
     }
   }
 };
@@ -158,6 +153,20 @@ class Environment extends EmitterObj {
 
     if (async) {
       this.asyncFilters.push(name);
+      // Wrap callback-style async filters so they return a Promise. Compiled
+      // templates then `await` every filter uniformly — sync or async — with
+      // no special-casing in the compiler.
+      wrapped = function asyncFilterWrapper(...args) {
+        return new Promise((resolve, reject) => {
+          func.apply(this, args.concat([(err, res) => {
+            if (err) {
+              reject(err);
+            } else {
+              resolve(res);
+            }
+          }]));
+        });
+      };
     }
     this.filters[name] = wrapped;
     return this;
@@ -298,23 +307,15 @@ class Environment extends EmitterObj {
       ctx = null;
     }
 
-    // We support a synchronous API to make it easier to migrate
-    // existing code to async. This works because if you don't do
-    // anything async work, the whole thing is actually run
-    // synchronously.
-    let syncResult = null;
+    const promise = new Promise((resolve, reject) => {
+      this.getTemplate(name, (err, tmpl) => (err ? reject(err) : resolve(tmpl)));
+    }).then((tmpl) => tmpl.render(ctx));
 
-    this.getTemplate(name, (err, tmpl) => {
-      if (err && cb) {
-        callbackAsync(cb, err);
-      } else if (err) {
-        throw err;
-      } else {
-        syncResult = tmpl.render(ctx, cb);
-      }
-    });
-
-    return syncResult;
+    if (cb) {
+      promise.then((res) => cb(null, res), (err) => cb(err));
+      return undefined;
+    }
+    return promise;
   }
 
   renderString(src, ctx, opts, cb) {
@@ -326,10 +327,6 @@ class Environment extends EmitterObj {
 
     const tmpl = new Template(src, this, opts.path);
     return tmpl.render(ctx, cb);
-  }
-
-  waterfall(tasks, callback, forceAsync) {
-    return waterfall(tasks, callback, forceAsync);
   }
 }
 
@@ -381,7 +378,7 @@ class Context extends Obj {
     return this.blocks[name][0];
   }
 
-  getSuper(env, name, block, frame, runtime, cb) {
+  getSuper(env, name, block, frame, runtime) {
     var idx = lib.indexOf(this.blocks[name] || [], block);
     var blk = this.blocks[name][idx + 1];
     var context = this;
@@ -390,7 +387,8 @@ class Context extends Obj {
       throw new Error('no super block available for "' + name + '"');
     }
 
-    blk(env, context, frame, runtime, cb);
+    // Block render functions are async; return the promise to be awaited.
+    return blk(env, context, frame, runtime);
   }
 
   addExport(name) {
@@ -441,6 +439,10 @@ class Template extends Obj {
     }
   }
 
+  // The compiled root render function is async (returns a Promise). render
+  // therefore returns a Promise; a callback, if given, is bridged from it.
+  // NOTE: the historical synchronous return value is gone — render() now
+  // resolves asynchronously even for fully-synchronous templates.
   render(ctx, parentFrame, cb) {
     if (typeof ctx === 'function') {
       cb = ctx;
@@ -450,64 +452,32 @@ class Template extends Obj {
       parentFrame = null;
     }
 
-    // If there is a parent frame, we are being called from internal
-    // code of another template, and the internal system
-    // depends on the sync/async nature of the parent template
-    // to be inherited, so force an async callback
-    const forceAsync = !parentFrame;
-
-    // Catch compile errors for async rendering
-    try {
+    const promise = (async () => {
       this.compile();
-    } catch (e) {
-      const err = lib._prettifyError(this.path, this.env.opts.dev, e);
-      if (cb) {
-        return callbackAsync(cb, err);
-      } else {
-        throw err;
-      }
-    }
-
-    const context = new Context(ctx || {}, this.blocks, this.env);
-    const frame = parentFrame ? parentFrame.push(true) : new Frame();
-    frame.topLevel = true;
-    let syncResult = null;
-    let didError = false;
-
-    this.rootRenderFunc(this.env, context, frame, globalRuntime, (err, res) => {
-      // TODO: this is actually a bug in the compiled template (because waterfall
-      // tasks are both not passing errors up the chain of callbacks AND are not
-      // causing a return from the top-most render function). But fixing that
-      // will require a more substantial change to the compiler.
-      if (didError && cb && typeof res !== 'undefined') {
-        // prevent multiple calls to cb
-        return;
-      }
-
-      if (err) {
-        err = lib._prettifyError(this.path, this.env.opts.dev, err);
-        didError = true;
-      }
-
-      if (cb) {
-        if (forceAsync) {
-          callbackAsync(cb, err, res);
-        } else {
-          cb(err, res);
-        }
-      } else {
-        if (err) {
-          throw err;
-        }
-        syncResult = res;
-      }
+      const context = new Context(ctx || {}, this.blocks, this.env);
+      const frame = parentFrame ? parentFrame.push(true) : new Frame();
+      frame.topLevel = true;
+      return this.rootRenderFunc(this.env, context, frame, globalRuntime);
+    })().catch((e) => {
+      throw lib._prettifyError(this.path, this.env.opts.dev, e);
     });
 
-    return syncResult;
+    if (cb) {
+      promise.then((res) => cb(null, res), (err) => cb(err));
+      return undefined;
+    }
+    return promise;
   }
 
+  // async-only variant: no callback argument, always returns a Promise<string>.
+  async renderAsync(ctx, parentFrame) {
+    if (Array.prototype.some.call(arguments, lib.isFunction)) {
+      throw new Error('renderAsync() does not accept a callback; it returns a Promise. Use render() for the callback API.');
+    }
+    return this.render(ctx, parentFrame);
+  }
 
-  getExported(ctx, parentFrame, cb) { // eslint-disable-line consistent-return
+  getExported(ctx, parentFrame, cb) {
     if (typeof ctx === 'function') {
       cb = ctx;
       ctx = {};
@@ -518,29 +488,22 @@ class Template extends Obj {
       parentFrame = null;
     }
 
-    // Catch compile errors for async rendering
-    try {
+    const promise = (async () => {
       this.compile();
-    } catch (e) {
-      if (cb) {
-        return cb(e);
-      } else {
-        throw e;
-      }
+      const frame = parentFrame ? parentFrame.push() : new Frame();
+      frame.topLevel = true;
+
+      // Run the rootRenderFunc to populate the context with exported vars
+      const context = new Context(ctx || {}, this.blocks, this.env);
+      await this.rootRenderFunc(this.env, context, frame, globalRuntime);
+      return context.getExported();
+    })();
+
+    if (cb) {
+      promise.then((res) => cb(null, res), (err) => cb(err));
+      return undefined;
     }
-
-    const frame = parentFrame ? parentFrame.push() : new Frame();
-    frame.topLevel = true;
-
-    // Run the rootRenderFunc to populate the context with exported vars
-    const context = new Context(ctx || {}, this.blocks, this.env);
-    this.rootRenderFunc(this.env, context, frame, globalRuntime, (err) => {
-      if (err) {
-        cb(err, null);
-      } else {
-        cb(null, context.getExported());
-      }
-    });
+    return promise;
   }
 
   compile() {
