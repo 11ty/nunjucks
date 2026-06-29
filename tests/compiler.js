@@ -1827,15 +1827,13 @@
         this._name = TestExtension;
 
         this.parse = function(parser, nodes) {
-          var body;
-          var args;
-          var tok = parser.nextToken();
+          let tok = parser.nextToken();
 
           // passing true makes it tolerate when no args exist
-          args = parser.parseSignature(true);
+          let args = parser.parseSignature(true);
           parser.advanceAfterBlockEnd(tok.value);
 
-          body = parser.parseUntilBlocks('endtest');
+          let body = parser.parseUntilBlocks('endtest');
           parser.advanceAfterBlockEnd();
 
           return new nodes.CallExtension(this, 'run', args, [body]);
@@ -1878,6 +1876,140 @@
       equal(
         '{% test("biz", cutoff=5) %}foobar{% endtest %}', null, opts,
         'bizra');
+
+      finish(done);
+    });
+
+    // https://github.com/mozilla/nunjucks/issues/158
+    it('should support custom tags that take no arguments', function(done) {
+      var opts;
+
+      function ScriptExtension() {
+        this.tags = ['script'];
+        this.parse = function(parser, nodes) {
+          let tok = parser.nextToken();
+
+          // parseSignature(null, true) tolerates a tag invoked with no args
+          let args = parser.parseSignature(true, true);
+          parser.advanceAfterBlockEnd(tok.value);
+
+          let body = parser.parseUntilBlocks('endscript');
+          parser.advanceAfterBlockEnd();
+
+          return new nodes.CallExtension(this, 'run', args, [body]);
+        };
+        this.run = function(context, body) {
+          return 'SCRIPT[' + body() + ']';
+        };
+      }
+
+      opts = {
+        extensions: {
+          ScriptExtension: new ScriptExtension()
+        }
+      };
+
+      // empty body — the exact case from the issue
+      equal('{% script %}{% endscript %}', null, opts, 'SCRIPT[]');
+      // non-empty body
+      equal('{% script %}hello{% endscript %}', null, opts, 'SCRIPT[hello]');
+
+      finish(done);
+    });
+
+    it('should support custom tags with no end block', function(done) {
+      var opts;
+
+      function GreetExtension() {
+        this.tags = ['greet'];
+        this.parse = function(parser, nodes) {
+          let tok = parser.nextToken();
+          let args = parser.parseSignature(true, true);
+          parser.advanceAfterBlockEnd(tok.value);
+
+          // No parseUntilBlocks / no content args: a standalone tag.
+          return new nodes.CallExtension(this, 'run', args, null);
+        };
+        this.run = function(context, name) {
+          return 'Hello ' + name + '!';
+        };
+      }
+
+      opts = {
+        extensions: {
+          GreetExtension: new GreetExtension()
+        }
+      };
+
+      equal('{% greet %}', null, opts, 'Hello undefined!');
+
+      finish(done);
+    });
+
+    it('should support async custom tags (CallExtensionAsync)', function(done) {
+      var opts;
+
+      function AsyncExtension() {
+        this.tags = ['arev'];
+        this.parse = function(parser, nodes) {
+          let tok = parser.nextToken();
+          let args = parser.parseSignature(true, true);
+          parser.advanceAfterBlockEnd(tok.value);
+          let body = parser.parseUntilBlocks('endarev');
+          parser.advanceAfterBlockEnd();
+
+          return new nodes.CallExtensionAsync(this, 'run', args, [body]);
+        };
+        this.run = function(context, body, callback) {
+          // Resolve on a later tick to exercise the async boundary.
+          setTimeout(function() {
+            body(function(err, content) {
+              callback(null, content.split('').reverse().join(''));
+            });
+          });
+        };
+      }
+
+      opts = {
+        extensions: {
+          AsyncExtension: new AsyncExtension()
+        }
+      };
+
+      equal('{% arev %}abcdef{% endarev %}', null, opts, 'fedcba');
+
+      finish(done);
+    });
+
+    it('should support async custom tags with no end block', function(done) {
+      var opts;
+
+      function AsyncGreetExtension() {
+        this.tags = ['agreet'];
+        this.parse = function(parser, nodes) {
+          let tok = parser.nextToken();
+          let args = parser.parseSignature(true, true);
+          parser.advanceAfterBlockEnd(tok.value);
+
+          // Async AND no end block: no content args, callback-style run.
+          return new nodes.CallExtensionAsync(this, 'run', args, null);
+        };
+        this.run = function(...args) {
+          let callback = args.pop();
+          let [, name] = args;
+          setTimeout(function() {
+            callback(null, 'Hello ' + name + '!');
+          });
+        };
+      }
+
+      opts = {
+        extensions: {
+          AsyncGreetExtension: new AsyncGreetExtension()
+        }
+      };
+
+      equal('{% agreet %}', null, opts, 'Hello undefined!');
 
       finish(done);
     });
