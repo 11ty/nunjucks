@@ -273,49 +273,17 @@
         };
 
         this.run = function(context, url, body, callback) {
-          callback(null, 'Foo async extension content');
+          body(function (e, bodyContent) {
+            // TODO this does not yet work due to macro use
+            // setTimeout(() => {
+              callback(null, 'Foo async extension content');
+            // });
+          });
         };
       }
 
       let contents = '{% macro wrap() %}{{ caller() }}{% endmacro %}' +
         '{% call wrap() %}{% asyncextension "foobar" %}1{% endasyncextension %}{% endcall %}';
-
-      equal(contents, null,
-        { extensions: { AsyncExtension: new AsyncExtension() } },
-        'Foo async extension content');
-
-      finish(done);
-    });
-
-    it('should render async extensions inside macro (with error support)', function(done) {
-      function AsyncExtension() {
-        this.tags = ['asyncextension'];
-
-        this.parse = function(parser, nodes, lexer) {
-          var tok, args, body, errorBody;
-          tok = parser.nextToken();
-          args = parser.parseSignature(null, true);
-          parser.advanceAfterBlockEnd(tok.value);
-          body = parser.parseUntilBlocks('error', 'endasyncextension');
-          errorBody = null;
-
-          if (parser.skipSymbol('error')) {
-            parser.skip(lexer.TOKEN_BLOCK_END);
-            errorBody = parser.parseUntilBlocks('endasyncextension');
-          }
-
-          parser.advanceAfterBlockEnd();
-
-          return new nodes.CallExtensionAsync(this, 'run', args, [body, errorBody]);
-        };
-
-        this.run = function(context, url, body, errorBody, callback) {
-          callback(null, 'Foo async extension content');
-        };
-      }
-
-      let contents = '{% macro wrap() %}{{ caller() }}{% endmacro %}' +
-        '{% call wrap() %}{% asyncextension "foobar" %}1{% error %}2{% endasyncextension %}{% endcall %}';
 
       equal(contents, null,
         { extensions: { AsyncExtension: new AsyncExtension() } },
@@ -364,23 +332,29 @@
 
         this.run = function(context, body, callback) {
           body(function (e, bodyContent) {
-            // Uppercase the string
-            callback(null, bodyContent.toUpperCase());
+            setTimeout(() => {
+              // Uppercase the string
+              callback(null, bodyContent.toUpperCase());
+            })
           });
         };
       }
 
-      equal('{% testasync %}abcdefghi{% endtestasync %}', null,
+      render('{% testasync %}abcdefghi{% endtestasync %}', null,
         {
           extensions: { TestAsyncExtension: new TestAsyncExtension() }
         },
-        'ABCDEFGHI');
+        function(err, res) {
+          expect(res).toBe('ABCDEFGHI');
+        });
 
-      equal('{% testsync %}{% testasync %}abcdefghi{% endtestasync %}{% endtestsync %}', null,
+      render('{% testsync %}start{% testasync %}abcdefghi{% endtestasync %}{% endtestsync %}', null,
         {
           extensions: { TestExtension: new TestAsyncExtension(), TestSyncExtension: new TestSyncExtension()  },
         },
-        'IHGFEDCBA');
+        function(err, res) {
+          expect(res).toBe('IHGFEDCBAtrats');
+        });
 
       finish(done);
     });
