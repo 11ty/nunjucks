@@ -349,5 +349,42 @@
 
       finish(done);
     });
+
+    it('for loop with async children (without using async each or async all)', function(done) {
+      function TestAsyncExtension() {
+        this.tags = ['testasync'];
+
+        this.parse = function(parser, nodes) {
+          var content;
+          var tag;
+          parser.advanceAfterBlockEnd();
+
+          content = parser.parseUntilBlocks('endtestasync');
+          tag = new nodes.CallExtensionAsync(this, 'run', null, [content]);
+          parser.advanceAfterBlockEnd();
+
+          return tag;
+        };
+
+        this.run = function(context, body, callback) {
+          body(function (e, bodyContent) {
+            setTimeout(() => {
+              // Uppercase the string
+              callback(null, bodyContent.toUpperCase());
+            })
+          });
+        };
+      }
+
+      render('{% for i in range(0, 3) %}{% testasync %}abc{{ i }}{% endtestasync %}{% endfor %}', null,
+        {
+          extensions: { TestAsyncExtension: new TestAsyncExtension() }
+        },
+        function(err, res) {
+          expect(res).toBe('ABC0ABC1ABC2');
+        });
+
+      finish(done);
+    });
   });
 }());
