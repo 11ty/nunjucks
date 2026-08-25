@@ -500,7 +500,7 @@ function striptags(input, preserveLinebreaks) {
   } else {
     res = trimmedInput.replace(/\s+/gi, ' ');
   }
-  return r.copySafeness(input, res);
+  return r.markSafe(lib.escape(res));
 }
 
 exports.striptags = striptags;
