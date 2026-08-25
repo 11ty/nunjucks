@@ -370,6 +370,9 @@ exports._values = _values;
 function extend(obj1, obj2) {
   obj1 = obj1 || {};
   keys_(obj2).forEach(k => {
+    if (k === '__proto__' || k === 'constructor' || k === 'prototype') {
+      return;
+    }
     obj1[k] = obj2[k];
   });
   return obj1;
