@@ -588,25 +588,27 @@ function urlize(str, length, nofollow) {
     var matches = word.match(puncRe);
     var possibleUrl = (matches) ? matches[1] : word;
     var shortUrl = possibleUrl.substr(0, length);
+    var escapedHref = lib.escape(possibleUrl);
+    var escapedText = lib.escape(shortUrl);
 
     // url that starts with http or https
     if (httpHttpsRe.test(possibleUrl)) {
-      return `<a href="${possibleUrl}"${noFollowAttr}>${shortUrl}</a>`;
+      return `<a href="${escapedHref}"${noFollowAttr}>${escapedText}</a>`;
     }
 
     // url that starts with www.
     if (wwwRe.test(possibleUrl)) {
-      return `<a href="http://${possibleUrl}"${noFollowAttr}>${shortUrl}</a>`;
+      return `<a href="http://${escapedHref}"${noFollowAttr}>${escapedText}</a>`;
     }
 
     // an email address of the form username@domain.tld
     if (emailRe.test(possibleUrl)) {
-      return `<a href="mailto:${possibleUrl}">${possibleUrl}</a>`;
+      return `<a href="mailto:${escapedHref}">${escapedHref}</a>`;
     }
 
     // url that ends in .com, .org or .net that is not an email address
     if (tldRe.test(possibleUrl)) {
-      return `<a href="http://${possibleUrl}"${noFollowAttr}>${shortUrl}</a>`;
+      return `<a href="http://${escapedHref}"${noFollowAttr}>${escapedText}</a>`;
     }
 
     return word;
