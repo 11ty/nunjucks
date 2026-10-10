@@ -248,7 +248,12 @@ function without(array) {
 
 exports.without = without;
 
+var MAX_REPEAT_LENGTH = 1000000;
+
 function repeat(char_, n) {
+  if (n > MAX_REPEAT_LENGTH) {
+    throw new exports.TemplateError('repeat() requested size exceeds maximum allowed length');
+  }
   var str = '';
   for (let i = 0; i < n; i++) {
     str += char_;
