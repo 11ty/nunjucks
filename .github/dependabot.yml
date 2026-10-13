@@ -12,3 +12,10 @@ updates:
     cooldown:
       default-days: 7
     assignees: [zachleat]
+  - package-ecosystem: npm
+    directory: "/"
+    schedule:
+      interval: weekly
+    cooldown:
+      default-days: 7
+    assignees: [zachleat]
