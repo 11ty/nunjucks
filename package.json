@@ -1,7 +1,7 @@
 {
   "name": "@11ty/nunjucks",
   "description": "A powerful templating engine with inheritance, asynchronous control, and more (jinja2 inspired)",
-  "version": "4.0.0-alpha.3",
+  "version": "4.0.0-alpha.4",
   "publishConfig": {
     "access": "public"
   },
@@ -12,20 +12,20 @@
   "main": "index.js",
   "browser": "./browser/nunjucks.js",
   "devDependencies": {
-    "@eslint/js": "^9.39.4",
-    "@vitest/browser": "^4.1.9",
-    "@vitest/browser-playwright": "^4.1.9",
-    "@vitest/coverage-v8": "^4.1.9",
+    "@eslint/js": "^9.39.5",
+    "@vitest/browser": "^4.1.11",
+    "@vitest/browser-playwright": "^4.1.11",
+    "@vitest/coverage-v8": "^4.1.11",
     "cross-env": "^10.1.0",
-    "eslint": "^9.39.4",
-    "eslint-config-airbnb-extended": "^3.1.0",
+    "eslint": "^9.39.5",
+    "eslint-config-airbnb-extended": "^3.3.0",
     "eslint-plugin-import": "^2.32.0",
-    "express": "^5.2.1",
-    "globals": "^17.7.0",
-    "playwright": "^1.61.1",
-    "supertest": "^7.2.2",
-    "vitest": "^4.1.9",
-    "webpack": "^5.108.1"
+    "express": "^5.3.0",
+    "globals": "^17.13.0",
+    "playwright": "^1.64.0",
+    "supertest": "^7.3.1",
+    "vitest": "^4.1.11",
+    "webpack": "^5.111.1"
   },
   "scripts": {
     "build:dist": "node scripts/copy-dist.js",
