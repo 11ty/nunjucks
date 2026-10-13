@@ -83,6 +83,65 @@
       })).toBe('FooTest3BazFizzle');
     });
 
+    describe('error cause', function() {
+      class CustomError extends Error {
+        constructor(message) {
+          super(message);
+          this.name = 'CustomError';
+        }
+      }
+
+      function createEnv(dev) {
+        var env = new Environment(new Loader(templatesPath), { dev: dev });
+        env.addFilter('boom', function() {
+          throw new CustomError('sync boom');
+        });
+        env.addFilter('asyncBoom', function(val, cb) {
+          setTimeout(function() {
+            cb(new CustomError('async boom'));
+          }, 0);
+        }, true);
+        return env;
+      }
+
+      async function catchError(env, src) {
+        try {
+          await env.renderString(src, {});
+        } catch (e) {
+          return e;
+        }
+        throw new Error('Expected render to throw');
+      }
+
+      [['filter', '{{ "x" | boom }}', 'sync boom'], ['async filter', '{{ "x" | asyncBoom }}', 'async boom']].forEach(function([label, src, message]) {
+        it(`should keep the cause of an error thrown by a ${label} when dev is false`, async function() {
+          var err = await catchError(createEnv(false), src);
+          var devErr = await catchError(createEnv(true), src);
+
+          expect(err.cause).toBeInstanceOf(CustomError);
+          expect(err.cause.message).toBe(message);
+          expect(err.name).toBe('Template render error');
+          expect(err.message).toBe(devErr.message);
+          expect(err.message).toContain(`CustomError: ${message}`);
+        });
+
+        it(`should keep the cause of an error thrown by a ${label} when dev is true`, async function() {
+          var err = await catchError(createEnv(true), src);
+
+          expect(err.name).toBe('Template render error');
+          expect(err.cause).toBeInstanceOf(CustomError);
+          expect(err.cause.message).toBe(message);
+        });
+      });
+
+      it('should not add a cause when there is none', async function() {
+        var err = await catchError(createEnv(false), '{% if %}');
+
+        expect(err.name).toBe('Template render error');
+        expect('cause' in err).toBe(false);
+      });
+    });
+
     it('should emit "load" event on Environment instance', function(done) {
       var env = new Environment(new Loader(templatesPath));
       env.on('load', function(name, source) {

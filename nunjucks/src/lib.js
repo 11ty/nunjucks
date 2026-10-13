@@ -36,7 +36,7 @@ function _prettifyError(path, withInternals, err) {
   // Unless they marked the dev flag, show them a trace from here
   if (!withInternals) {
     const old = err;
-    err = new Error(old.message);
+    err = old.cause ? new Error(old.message, { cause: old.cause }) : new Error(old.message);
     err.name = old.name;
   }
 
