@@ -9,6 +9,9 @@
   "contributors": [
     "Zach Leatherman (https://zachleat.com)"
   ],
+  "engines": {
+    "node": ">=20"
+  },
   "main": "index.js",
   "browser": "./browser/nunjucks.js",
   "devDependencies": {
