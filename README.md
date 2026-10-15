@@ -14,9 +14,9 @@ templating engine for javascript. It is heavily inspired by
 
 `npm install nunjucks`
 
-To use the file watcher built-in to Nunjucks, Chokidar must be installed separately.
+To use the file watcher built-in to Nunjucks, `@11ty/chokidar-with-glob-support` must be installed separately.
 
-`npm install nunjucks chokidar`
+`npm install nunjucks @11ty/chokidar-with-glob-support`
 
 (View the [CHANGELOG](https://github.com/mozilla/nunjucks/releases))
 

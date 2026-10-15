@@ -35,9 +35,9 @@ class FileSystemLoader extends Loader {
       // Watch all the templates in the paths and fire an event when
       // they change
       try {
-        chokidar = require('chokidar'); // eslint-disable-line global-require
+        chokidar = require('@11ty/chokidar-with-glob-support'); // eslint-disable-line global-require
       } catch (e) {
-        throw new Error('watch requires chokidar to be installed');
+        throw new Error('watch requires @11ty/chokidar-with-glob-support to be installed');
       }
       const paths = this.searchPaths.filter(fs.existsSync);
       const watcher = chokidar.watch(paths);
@@ -94,9 +94,9 @@ class NodeResolveLoader extends Loader {
 
     if (opts.watch) {
       try {
-        chokidar = require('chokidar'); // eslint-disable-line global-require
+        chokidar = require('@11ty/chokidar-with-glob-support'); // eslint-disable-line global-require
       } catch (e) {
-        throw new Error('watch requires chokidar to be installed');
+        throw new Error('watch requires @11ty/chokidar-with-glob-support to be installed');
       }
       this.watcher = chokidar.watch();
 

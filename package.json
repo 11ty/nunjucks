@@ -58,10 +58,10 @@
     "webpack": "^3.10.0"
   },
   "peerDependencies": {
-    "chokidar": "^3.3.0"
+    "@11ty/chokidar-with-glob-support": "^1.1.0"
   },
   "peerDependenciesMeta": {
-    "chokidar": {
+    "@11ty/chokidar-with-glob-support": {
       "optional": true
     }
   },
