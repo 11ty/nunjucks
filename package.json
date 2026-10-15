@@ -1,8 +1,12 @@
 {
-  "name": "nunjucks",
+  "name": "@11ty/nunjucks",
   "description": "A powerful templating engine with inheritance, asynchronous control, and more (jinja2 inspired)",
-  "version": "3.2.4",
-  "author": "James Long <longster@gmail.com>",
+  "version": "3.3.0",
+  "publishConfig": { "access": "public" },
+  "author": "James Long (https://jlongster.com/)",
+  "contributors": [
+    "Zach Leatherman (https://zachleat.com)"
+  ],
   "dependencies": {
     "a-sync-waterfall": "^1.0.0",
     "asap": "^2.0.3",
@@ -98,7 +102,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/mozilla/nunjucks.git"
+    "url": "https://github.com/11ty/nunjucks.git"
   },
   "keywords": [
     "template",
@@ -106,6 +110,6 @@
   ],
   "license": "BSD-2-Clause",
   "bugs": {
-    "url": "https://github.com/mozilla/nunjucks/issues"
+    "url": "https://github.com/11ty/nunjucks/issues"
   }
 }

@@ -1,6 +1,12 @@
 Changelog
 =========
 
+3.3.0 (Oct 15 2026)
+-------------------
+
+* Publish as `@11ty/nunjucks`.
+* Replace the optional `chokidar` peer dependency with [`@11ty/chokidar-with-glob-support`](https://www.npmjs.com/package/@11ty/chokidar-with-glob-support) for the `watch` option. Fixes [#27](https://github.com/11ty/nunjucks/issues/27).
+
 3.2.4 (Apr 13 2023)
 ------------------
 

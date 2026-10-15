@@ -1,24 +1,21 @@
-# Nunjucks
-
-[![NPM Version][npm-image]][npm-url]
-[![NPM Downloads][downloads-image]][downloads-url]
-[![CI][github-actions-image]][github-actions-url]
-[![Codecov][codecov-image]][codecov-url]
+# @11ty/nunjucks
 
 [Nunjucks](https://mozilla.github.io/nunjucks/) is a full featured
 templating engine for javascript. It is heavily inspired by
 [jinja2](https://jinja.palletsprojects.com/). View the docs
 [here](https://mozilla.github.io/nunjucks/).
 
+This is the 11ty-maintained 3.x line of Mozilla’s `nunjucks`.
+
 ## Installation
 
-`npm install nunjucks`
+`npm install @11ty/nunjucks`
 
 To use the file watcher built-in to Nunjucks, `@11ty/chokidar-with-glob-support` must be installed separately.
 
-`npm install nunjucks @11ty/chokidar-with-glob-support`
+`npm install @11ty/nunjucks @11ty/chokidar-with-glob-support`
 
-(View the [CHANGELOG](https://github.com/mozilla/nunjucks/releases))
+(View the [CHANGELOG](CHANGELOG.md))
 
 ## Documentation
 
@@ -43,13 +40,3 @@ Contributions are always welcome! Before you submit an issue or pull request, pl
 ## Contributors
 
 [![Contributors graph. Avatars provided by https://contrib.rocks](https://contrib.rocks/image?repo=mozilla/nunjucks)](https://github.com/mozilla/nunjucks/graphs/contributors)
-
-
-[npm-image]: https://img.shields.io/npm/v/nunjucks.svg
-[npm-url]: https://npmjs.org/package/nunjucks
-[downloads-image]: https://img.shields.io/npm/dm/nunjucks.svg
-[downloads-url]: https://npmjs.org/package/nunjucks
-[github-actions-image]: https://github.com/mozilla/nunjucks/actions/workflows/tests.yml/badge.svg
-[github-actions-url]: https://github.com/mozilla/nunjucks/actions
-[codecov-image]: https://img.shields.io/codecov/c/gh/mozilla/nunjucks.svg
-[codecov-url]: https://codecov.io/gh/mozilla/nunjucks/branch/master
