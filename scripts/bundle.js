@@ -36,6 +36,7 @@ function runWebpack(opts) {
           filename: filename,
           library: 'nunjucks',
           libraryTarget: 'umd',
+          globalObject: 'typeof self !== \'undefined\' ? self : this',
           devtoolModuleFilenameTemplate: function(info) {
             return path.relative(destDir, info.absoluteResourcePath);
           }
@@ -79,9 +80,11 @@ function runWebpack(opts) {
         ]
       };
 
-      if (opts.min) {
-        config.plugins.push(
+      config.optimization = {
+        minimize: !!opts.min,
+        minimizer: [
           new TerserPlugin({
+            extractComments: false,
             terserOptions: {
               mangle: {
                 properties: {
@@ -93,8 +96,8 @@ function runWebpack(opts) {
               }
             }
           })
-        );
-      }
+        ]
+      };
 
       webpack(config).run(function(err, stats) {
         if (err) {
