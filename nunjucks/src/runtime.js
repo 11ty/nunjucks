@@ -179,8 +179,13 @@ SafeString.prototype.toString = function toString() {
   return this.val;
 };
 
+// Also accepts SafeStrings from other copies of Nunjucks (e.g. `nunjucks` alongside `@11ty/nunjucks`)
+function isSafeString(val) {
+  return val instanceof SafeString || (val instanceof String && typeof val.val === 'string');
+}
+
 function copySafeness(dest, target) {
-  if (dest instanceof SafeString) {
+  if (isSafeString(dest)) {
     return new SafeString(target);
   }
   return target.toString();
@@ -209,7 +214,7 @@ function markSafe(val) {
 function suppressValue(val, autoescape) {
   val = (val !== undefined && val !== null) ? val : '';
 
-  if (autoescape && !(val instanceof SafeString)) {
+  if (autoescape && !isSafeString(val)) {
     val = lib.escape(val.toString());
   }
 
@@ -396,6 +401,7 @@ module.exports = {
   handleError: handleError,
   keys: lib.keys,
   SafeString: SafeString,
+  isSafeString: isSafeString,
   copySafeness: copySafeness,
   markSafe: markSafe,
   asyncEach: asyncEach,

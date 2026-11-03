@@ -131,7 +131,7 @@ function dump(obj, spaces) {
 exports.dump = dump;
 
 function escape(str) {
-  if (str instanceof r.SafeString) {
+  if (r.isSafeString(str)) {
     return str;
   }
   str = (str === null || str === undefined) ? '' : str;
@@ -141,7 +141,7 @@ function escape(str) {
 exports.escape = escape;
 
 function safe(str) {
-  if (str instanceof r.SafeString) {
+  if (r.isSafeString(str)) {
     return str;
   }
   str = (str === null || str === undefined) ? '' : str;
@@ -219,7 +219,7 @@ function lengthFilter(val) {
       // ECMAScript 2015 Maps and Sets
       return value.size;
     }
-    if (lib.isObject(value) && !(value instanceof r.SafeString)) {
+    if (lib.isObject(value) && !r.isSafeString(value)) {
       // Objects (besides SafeStrings), non-primative Arrays
       return lib.keys(value).length;
     }
@@ -329,7 +329,7 @@ function replace(str, old, new_, maxCount) {
   }
 
   // If by now, we don't have a string, throw it back
-  if (typeof str !== 'string' && !(str instanceof r.SafeString)) {
+  if (typeof str !== 'string' && !r.isSafeString(str)) {
     return str;
   }
 

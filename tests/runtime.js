@@ -126,5 +126,30 @@
 
       finish(done);
     });
+
+    it('should not escape a SafeString from another copy of nunjucks', function(done) {
+      function OtherSafeString(val) {
+        this.val = val;
+        this.length = val.length;
+      }
+      OtherSafeString.prototype = Object.create(String.prototype, {
+        length: {writable: true, configurable: true, value: 0}
+      });
+      OtherSafeString.prototype.toString = OtherSafeString.prototype.valueOf = function() {
+        return this.val;
+      };
+
+      render('{{ foo }}|{{ foo | replace("hi", "yo") }}|{{ foo is escaped }}|{{ bar }}', {
+        foo: new OtherSafeString('<b>hi</b>'),
+        bar: new String('<i>')
+      }, {
+        autoescape: true
+      }, function(err, res) {
+        expect(err).toBe(null);
+        expect(res).toBe('<b>hi</b>|<b>yo</b>|true|&lt;i&gt;');
+      });
+
+      finish(done);
+    });
   });
 }());

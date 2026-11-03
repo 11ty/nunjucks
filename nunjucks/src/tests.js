@@ -1,6 +1,6 @@
 'use strict';
 
-var SafeString = require('./runtime').SafeString;
+var isSafeString = require('./runtime').isSafeString;
 
 /**
  * Returns `true` if the object is a function, otherwise `false`.
@@ -43,7 +43,7 @@ exports.divisibleby = divisibleby;
  * @returns { boolean }
  */
 function escaped(value) {
-  return value instanceof SafeString;
+  return isSafeString(value);
 }
 
 exports.escaped = escaped;
