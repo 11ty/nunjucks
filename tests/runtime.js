@@ -141,6 +141,7 @@
 
       render('{{ foo }}|{{ foo | replace("hi", "yo") }}|{{ foo is escaped }}|{{ bar }}', {
         foo: new OtherSafeString('<b>hi</b>'),
+        // eslint-disable-next-line no-new-wrappers
         bar: new String('<i>')
       }, {
         autoescape: true
