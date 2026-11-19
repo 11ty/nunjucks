@@ -1,6 +1,4 @@
 #!/usr/bin/env node
-/* eslint-disable vars-on-top, func-names */
-
 'use strict';
 
 var path = require('path');
@@ -68,7 +66,7 @@ function runWebpack() {
 
 runWebpack()
   .then(function(stats) {
-    console.log(stats); // eslint-disable-line no-console
+    console.log(stats);
   })
   .catch(function(err) {
     throw err;

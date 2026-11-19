@@ -898,12 +898,10 @@
 
         this.parse = function(parser, nodes) {
           var begun = parser.peekToken();
-          var args = null;
-
           // Skip the name
           parser.nextToken();
 
-          args = parser.parseSignature(true);
+          var args = parser.parseSignature(true);
           parser.advanceAfterBlockEnd(begun.value);
 
           return new nodes.CallExtension(this, 'biz', args);

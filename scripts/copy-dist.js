@@ -18,4 +18,4 @@ const destSrc = path.join(root, 'src');
 fs.rmSync(destSrc, { recursive: true, force: true });
 fs.cpSync(path.join(sourceDir, 'src'), destSrc, { recursive: true });
 
-console.log('Copied nunjucks/ -> index.js + src/'); // eslint-disable-line no-console
+console.log('Copied nunjucks/ -> index.js + src/');
